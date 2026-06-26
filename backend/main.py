@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import db
 
 app = FastAPI(title="Fitness Tracker API")
+
+from app.routers import measurements
+app.include_router(measurements.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,10 +16,3 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"status": "ok", "message": "Fitness Tracker API running"}
-
-
-
-@app.get("/test-db")
-async def test_db():
-    collections = await db.list_collection_names()
-    return {"status": "connected", "collections": collections}
