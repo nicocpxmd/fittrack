@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.database import measurements as col
-from app.models import MeasurementRecord
+from app.models import MeasurementRecord, MeasurementUpdate
 from bson import ObjectId
 
 router = APIRouter(prefix="/measurements", tags=["measurements"])
@@ -25,6 +25,17 @@ async def get_one(id: str):
     if not doc:
         raise HTTPException(404, "Record not found")
     return serialize(doc)
+
+@router.put("/{id}")
+async def update(id: str, payload: MeasurementUpdate):
+    update_data = payload.model_dump(exclude_none=True)
+    if not update_data:
+        raise HTTPException(400, "No update data provided")
+
+    result = await col.update_one({"_id": ObjectId(id)}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(404, "Record not found")
+    return {"updated": True}
 
 @router.delete("/{id}", status_code=204)
 async def delete(id: str):
