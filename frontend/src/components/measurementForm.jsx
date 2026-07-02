@@ -9,7 +9,20 @@ function MeasurementForm({ onSaved }) {
   const [status, setStatus] = useState(null)
 
   const handleChange = (field, val) => {
+    setStatus(null)
     setValues(prev => ({ ...prev, [field]: val === '' ? undefined : parseFloat(val) }))
+  }
+
+  const validateMeasurements = (measurements) => {
+    if (measurements.weight_kg !== undefined && (measurements.weight_kg < 20 || measurements.weight_kg > 300)) {
+      throw new Error('Weight must be between 20 and 300 kg')
+    }
+    if (Object.values(measurements).some(v => v < 0)) {
+      throw new Error('Measurement values cannot be negative')
+    }
+    if (Object.keys(measurements).length === 0) {
+      throw new Error('Please enter at least one measurement')
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -19,6 +32,7 @@ function MeasurementForm({ onSaved }) {
       Object.entries(values).filter(([, v]) => v !== undefined && !isNaN(v))
     )
     try {
+      validateMeasurements(measurements)
       await addMeasurement({
         date,
         date_confidence: 'exact',
@@ -48,9 +62,16 @@ function MeasurementForm({ onSaved }) {
         {FIELDS.map(field => (
           <div key={field}>
             <label className="block text-xs text-gray-500 mb-1">{field}</label>
-            <input type="number" step="0.1" value={values[field] ?? ''}
+            <input
+              type="number"
+              step="0.1"
+              min={field === 'weight_kg' ? 20 : 0}
+              max={field === 'weight_kg' ? 300 : undefined}
+              required={field === 'weight_kg'}
+              value={values[field] ?? ''}
               onChange={e => handleChange(field, e.target.value)}
-              className="border rounded px-2 py-1 w-full text-sm" />
+              className="border rounded px-2 py-1 w-full text-sm"
+            />
           </div>
         ))}
       </div>
@@ -60,8 +81,16 @@ function MeasurementForm({ onSaved }) {
         {status === 'saving' ? 'Saving...' : 'Save Measurement'}
       </button>
 
-      {status === 'saved' && <p className="text-green-600 text-sm">Saved!</p>}
-      {status?.startsWith('error') && <p className="text-red-600 text-sm">{status}</p>}
+      {status === 'saved' && (
+        <div className="rounded border border-green-200 bg-green-50 p-3 text-green-700 text-sm">
+          Measurement saved successfully.
+        </div>
+      )}
+      {status?.startsWith('error') && (
+        <div className="rounded border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
+          {status.replace('error: ', '')}
+        </div>
+      )}
     </form>
   )
 }

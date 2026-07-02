@@ -6,8 +6,8 @@ const api = axios.create({
 
 export const getMeasurements = () => api.get('/measurements')
 export const addMeasurement = (data) => api.post('/measurements', data)
-export const updateMeasurement = (id, data) => api.put(`/measurements/${id}`, data)
 export const deleteMeasurement = (id) => api.delete(`/measurements/${id}`)
+export const updateMeasurement = (id, data) => api.put(`/measurements/${id}`, data)
 
 export default api
 
