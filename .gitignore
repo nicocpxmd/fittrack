@@ -1,0 +1,23 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Variables de entorno (contiene tu URL de MongoDB — NUNCA subir)
+.env
+**/.env
+
+# Node
+node_modules/
+
+# Archivos generados
+data/measurements.json
+
+# VS Code
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
