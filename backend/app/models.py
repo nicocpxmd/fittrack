@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
 
@@ -13,19 +13,19 @@ class DataContext(str, Enum):
     adult_baseline    = "adult_baseline"
 
 class Measurements(BaseModel):
-    weight_kg:    Optional[float] = Field(None, ge=20, le=300)
-    height_cm:    Optional[float] = Field(None, ge=0)
-    neck_cm:      Optional[float] = Field(None, ge=0)
-    shoulder_cm:  Optional[float] = Field(None, ge=0)
-    chest_cm:     Optional[float] = Field(None, ge=0)
-    arm_cm:       Optional[float] = Field(None, ge=0)
-    forearm_cm:   Optional[float] = Field(None, ge=0)
-    waist_cm:     Optional[float] = Field(None, ge=0)
-    abdomen_cm:   Optional[float] = Field(None, ge=0)
-    hip_cm:       Optional[float] = Field(None, ge=0)
-    upper_leg_cm: Optional[float] = Field(None, ge=0)
-    lower_leg_cm: Optional[float] = Field(None, ge=0)
-    calf_cm:      Optional[float] = Field(None, ge=0)
+    weight_kg:    Optional[float] = None
+    height_cm:    Optional[float] = None
+    neck_cm:      Optional[float] = None
+    shoulder_cm:  Optional[float] = None
+    chest_cm:     Optional[float] = None
+    arm_cm:       Optional[float] = None
+    forearm_cm:   Optional[float] = None
+    waist_cm:     Optional[float] = None
+    abdomen_cm:   Optional[float] = None
+    hip_cm:       Optional[float] = None
+    upper_leg_cm: Optional[float] = None
+    lower_leg_cm: Optional[float] = None
+    calf_cm:      Optional[float] = None
 
 class MeasurementRecord(BaseModel):
     date:            str
@@ -36,3 +36,10 @@ class MeasurementRecord(BaseModel):
 
 class MeasurementUpdate(BaseModel):
     measurements: Measurements
+
+    def get_dot_notation(self) -> dict:
+        result = {}
+        for k, v in self.measurements.model_dump().items():
+            if v is not None:
+                result[f"measurements.{k}"] = v
+        return result

@@ -28,10 +28,9 @@ async def get_one(id: str):
 
 @router.put("/{id}")
 async def update(id: str, payload: MeasurementUpdate):
-    update_data = payload.model_dump(exclude_none=True)
+    update_data = payload.get_dot_notation()
     if not update_data:
         raise HTTPException(400, "No update data provided")
-
     result = await col.update_one({"_id": ObjectId(id)}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(404, "Record not found")
