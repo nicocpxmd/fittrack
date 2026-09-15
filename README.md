@@ -3,7 +3,6 @@
 Aplicación de seguimiento y análisis de medidas corporales desarrollada con React, FastAPI y MongoDB Atlas.
  
 ## Tecnologías utilizadas
- 
 ### Frontend
 - React
 - Vite
