@@ -125,12 +125,14 @@ npm run dev
 ```
  
 Si ambos servicios se ejecutan correctamente, la instalación fue exitosa.
+
  
 ---
  
 ## Variables de entorno
  
 Se proporciona un archivo `.env.example` como plantilla para la configuración local de cada integrante.
+
  
 ---
  
