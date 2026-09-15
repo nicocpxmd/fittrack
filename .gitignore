@@ -5,7 +5,7 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Variables de entorno (contiene tu URL de MongoDB — NUNCA subir)
+# Variables de entorno
 .env
 **/.env
 
