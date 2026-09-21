@@ -1,7 +1,8 @@
 # Python
 venv/
 .venv/
-__pycache__/
+__pycache__/ 
+*.pyc estructura.txt 
 *.pyc
 *.pyo
 
@@ -21,3 +22,6 @@ data/measurements.json
 # Sistema
 .DS_Store
 Thumbs.db
+
+#txt
+estructura.txt
