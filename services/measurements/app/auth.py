@@ -13,8 +13,8 @@ async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depend
     token = credentials.credentials  # Extraemos el string del token
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        user_id = payload.get("sub")
+        if not isinstance(user_id, str):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
         return user_id
     except jwt.ExpiredSignatureError:
