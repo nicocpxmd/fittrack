@@ -35,11 +35,20 @@ class MeasurementRecord(BaseModel):
     notes:           Optional[str]  = ""
 
 class MeasurementUpdate(BaseModel):
-    measurements: Measurements
+    date:            Optional[str]            = None
+    date_confidence: Optional[DateConfidence]  = None
+    data_context:    Optional[DataContext]     = None
+    notes:           Optional[str]             = None
+    measurements:    Optional[Measurements]    = None
 
     def get_dot_notation(self) -> dict:
         result = {}
-        for k, v in self.measurements.model_dump().items():
-            if v is not None:
-                result[f"measurements.{k}"] = v
+        for field in ("date", "date_confidence", "data_context", "notes"):
+            value = getattr(self, field)
+            if value is not None:
+                result[field] = value
+        if self.measurements is not None:
+            for k, v in self.measurements.model_dump().items():
+                if v is not None:
+                    result[f"measurements.{k}"] = v
         return result
