@@ -1,29 +1,34 @@
-from fastapi import APIRouter, HTTPException, status, Header
+vagrant@servidorUbuntu2:~/fittrack/services/progress/app/routers$ cat progress.py
+from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime
-from typing import List, Optional
-from models import ProgressCalculateRequest, ProgressSnapshotResponse
-from database import progress_collection
-from clients import fetch_measurements, validate_user
+from typing import List
+from app.models import ProgressCalculateRequest, ProgressSnapshotResponse
+from app.database import progress_collection
+from app.clients import fetch_measurements, validate_user
 
 router = APIRouter(prefix="/progress", tags=["progress"])
+security = HTTPBearer()
 
 @router.post("/calculate", response_model=ProgressSnapshotResponse, status_code=status.HTTP_201_CREATED)
 async def calculate_progress(
     payload: ProgressCalculateRequest,
-    authorization: Optional[str] = Header(None)
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    # 1. Validar el token contra el servicio users si se proporciona
-    await validate_user(authorization)
+    token = credentials.credentials
 
-    # 2. Consultar mediciones del servicio measurements
-    raw_measurements = await fetch_measurements()
+    # 1. Validar el token contra el servicio users
+    await validate_user(token)
+
+    # 2. Consultar mediciones del servicio measurements enviando únicamente el token
+    raw_measurements = await fetch_measurements(token)
 
     # 3. Filtrar por rango de fechas y tipo_medida analizando el diccionario anidado
     filtered = []
     for record in raw_measurements:
         rec_date = record.get("date")
         measurements_dict = record.get("measurements", {})
-        
+
         if rec_date and payload.desde <= rec_date <= payload.hasta:
             val = measurements_dict.get(payload.tipo_medida)
             if val is not None:
