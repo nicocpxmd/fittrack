@@ -1,161 +1,237 @@
-# Contrato de API — Goals
+# Goals: guia de cambios e integracion
 
-**Servicio:** goals  
-**Stack:** Node.js + Express + MySQL  
-**Base URL local:** `http://localhost:8004` (variable de entorno `GOALS_PORT`)  
-**Prefijo de rutas:** `/goals`
+## Resumen
 
-## Formato de error
+El microservicio `goals` administra metas personales y calcula su estado actual consultando otros microservicios por HTTP.
 
-```json
-{ "error": "mensaje del error" }
-```
+La configuracion local esperada es:
 
----
+| Servicio | Puerto |
+|---|---:|
+| users | 8002 |
+| workouts | 8003 |
+| goals | 8004 |
+| progress | 8005 |
+| measurements | 8001 |
+
+## Cambios principales
+
+### `user_id` explicito
+
+Las rutas de `goals` ya no requieren el header `Authorization`. El `user_id` debe enviarse explicitamente:
+
+- En el body para `POST /goals`.
+- En el query string para `GET /goals`.
+- En el query string para `GET /goals/:id`.
+- En el body para `PUT /goals/:id`.
+- En el query string para `DELETE /goals/:id`.
+
+El servicio verifica que el `user_id` recibido coincida con el usuario propietario de la meta en las operaciones sobre una meta especifica.
+
+> Esta modalidad es util para pruebas locales, pero no reemplaza una autenticacion real. Un cliente puede enviar un `user_id` arbitrario porque `goals` ya no valida un token contra `users`.
 
 ## Endpoints
 
-### `POST /goals`
-* **Qué hace:** Valida el token JWT del usuario con el servicio `Users`, y si es válido, crea una nueva meta vinculada a su `user_id`.
-* **Headers requeridos:**
-  * `Authorization`: `Bearer <token_jwt>`
-* **Request body:**
-  ```json
-  {
-    "tipo_meta": "rutina",
-    "descripcion": "Completar 10 rutinas este mes",
-    "valor_objetivo": 10.0,
-    "fecha_limite": "2026-10-31"
-  }
-  ```
-* **Response 201:**
-  ```json
-  {
-    "mensaje": "Meta creada exitosamente",
-    "id": 1
-  }
-  ```
-* **Errores:**
-  * `400` — `{ "error": "Faltan datos obligatorios." }`
-  * `401` — `{ "error": "No autorizado. Token inválido o expirado." }`
-  * `500` — `{ "error": "Error interno del servidor." }`
+### Crear una meta
 
----
+```http
+POST http://localhost:8004/goals
+Content-Type: application/json
+```
 
-### `GET /goals`
-* **Qué hace:** Devuelve una lista de todas las metas creadas por el usuario autenticado.
-* **Headers requeridos:**
-  * `Authorization`: `Bearer <token_jwt>`
-* **Response 200:**
-  ```json
-  [
-    {
-      "id": 1,
-      "user_id": "uuid-del-usuario",
-      "tipo_meta": "rutina",
-      "descripcion": "Completar 10 rutinas este mes",
-      "valor_objetivo": "10.00",
-      "fecha_limite": "2026-10-31T05:00:00.000Z",
-      "created_at": "2026-09-24T10:00:00.000Z"
-    }
-  ]
-  ```
-* **Errores:**
-  * `401` — `{ "error": "No autorizado o error al consultar metas." }`
+Body:
 
----
+```json
+{
+  "user_id": "ID_DEL_USUARIO",
+  "tipo_meta": "weight_kg",
+  "descripcion": "Alcanzar peso objetivo",
+  "valor_objetivo": 70,
+  "fecha_limite": "2026-12-31"
+}
+```
 
-### `GET /goals/{id}`
-* **Qué hace:** Obtiene los detalles de una meta específica y consulta dinámicamente el progreso actual comunicándose con el microservicio de `Workouts` (si es meta de rutina) o `Progress` (si es meta de medida corporal) para calcular el porcentaje de cumplimiento.
-* **Response 200:**
-  ```json
-  {
-    "id": 1,
-    "user_id": "uuid-del-usuario",
-    "tipo_meta": "rutina",
-    "descripcion": "Completar 10 rutinas este mes",
-    "valor_objetivo": "10.00",
-    "fecha_limite": "2026-10-31T05:00:00.000Z",
-    "created_at": "2026-09-24T10:00:00.000Z",
-    "valor_actual": 4,
-    "porcentaje_cumplimiento": 40.0,
-    "cumplida": false
-  }
-  ```
-* **Errores:**
-  * `404` — `{ "error": "Meta no encontrada." }`
-  * `500` — `{ "error": "Error interno." }`
+Respuesta esperada (`201`):
 
----
+```json
+{
+  "mensaje": "Meta creada exitosamente",
+  "id": 1
+}
+```
 
-### `PUT /goals/{id}`
-* **Qué hace:** Permite actualizar los campos de una meta existente. Valida que la meta pertenezca al usuario autenticado.
-* **Headers requeridos:**
-  * `Authorization`: `Bearer <token_jwt>`
-* **Request body (envía solo los campos a modificar):**
-  ```json
-  {
-    "descripcion": "Completar 15 rutinas este mes",
-    "valor_objetivo": 15.0
-  }
-  ```
-* **Response 200:**
-  ```json
-  {
-    "mensaje": "Meta actualizada con éxito."
-  }
-  ```
-* **Errores:**
-  * `401` — `{ "error": "No autorizado. Token inválido o expirado." }`
-  * `403` — `{ "error": "Sin permiso." }`
-  * `404` — `{ "error": "No existe la meta." }`
+Campos obligatorios:
 
----
+- `user_id`
+- `tipo_meta`
+- `descripcion`
+- `valor_objetivo`
+- `fecha_limite`
 
-### `DELETE /goals/{id}`
-* **Qué hace:** Elimina una meta de la base de datos. Requiere que la meta pertenezca al usuario autenticado.
-* **Headers requeridos:**
-  * `Authorization`: `Bearer <token_jwt>`
-* **Response 200:**
-  ```json
-  {
-    "mensaje": "Meta eliminada."
-  }
-  ```
-* **Errores:**
-  * `401` — `{ "error": "No autorizado. Token inválido o expirado." }`
-  * `403` — `{ "error": "Sin permiso." }`
-  * `404` — `{ "error": "Meta no encontrada." }`
+### Listar metas de un usuario
 
----
+```http
+GET http://localhost:8004/goals?user_id=ID_DEL_USUARIO
+```
 
-## Instrucciones paso a paso para correrlo localmente
+Sin `user_id`, responde `400`.
 
-1. Abre una terminal y sitúate en la carpeta del servicio:
-   ```bash
-   cd services/goals
-   ```
-   *(Nota: si lo ubicaste dentro de una subcarpeta, usa `cd services/goals/app`)*.
+### Consultar una meta y calcular su progreso
 
-2. Instala las dependencias del proyecto:
-   ```bash
-   npm install
-   ```
+```http
+GET http://localhost:8004/goals/ID_DE_LA_META?user_id=ID_DEL_USUARIO
+```
 
-3. Copia `.env.example` a `.env` y ajusta tus credenciales de MySQL y las URLs de los otros servicios (Users, Progress, Workouts):
-   * **Windows (CMD/PowerShell):** 
-     ```bash
-     copy .env.example .env
-     ```
-   * **Mac/Linux/Git Bash:** 
-     ```bash
-     cp .env.example .env
-     ```
+La respuesta agrega:
 
-4. Asegúrate de tener tu base de datos MySQL corriendo y que la tabla `goals` esté creada según el archivo `schema.sql`.
+```json
+{
+  "valor_actual": 72.5,
+  "porcentaje_cumplimiento": 100,
+  "cumplida": true
+}
+```
 
-5. Arranca el servicio en el puerto 8004 con recarga automática:
-   ```bash
-   node --watch src/index.js
-   ```
-   *(O usa `npm run dev` si configuraste ese script en tu `package.json`)*.
+Si el `user_id` no coincide con el propietario de la meta, responde `403`.
+
+### Listar todas las metas (administracion)
+
+```http
+GET http://localhost:8004/goals/admin/all
+```
+
+Esta ruta no filtra por usuario.
+
+### Actualizar una meta
+
+```http
+PUT http://localhost:8004/goals/ID_DE_LA_META
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "user_id": "ID_DEL_USUARIO",
+  "tipo_meta": "weight_kg",
+  "descripcion": "Nuevo objetivo de peso",
+  "valor_objetivo": 68,
+  "fecha_limite": "2026-12-31"
+}
+```
+
+`user_id` es obligatorio aunque solo se quiera modificar otro campo.
+
+### Eliminar una meta
+
+```http
+DELETE http://localhost:8004/goals/ID_DE_LA_META?user_id=ID_DEL_USUARIO
+```
+
+## Integraciones
+
+### Metas de medidas corporales
+
+Para metas como `weight_kg`, `height_cm` o `waist_cm`, el flujo es:
+
+```text
+goals -> progress -> measurements
+```
+
+Al consultar una meta, `goals` llama a:
+
+```http
+POST http://localhost:8005/progress/calculate
+```
+
+Con un body equivalente a:
+
+```json
+{
+  "user_id": "ID_DEL_USUARIO",
+  "tipo_medida": "weight_kg",
+  "desde": "2026-01-01",
+  "hasta": "2026-12-31"
+}
+```
+
+`progress` consulta `measurements`, calcula el valor inicial, el valor actual y la diferencia, y guarda un snapshot.
+
+Si `progress` no responde, `goals` intenta consultar directamente:
+
+```http
+GET http://localhost:8001/measurements/
+```
+
+### Metas de rutinas
+
+Para una meta con:
+
+```json
+{
+  "tipo_meta": "rutina"
+}
+```
+
+El flujo es:
+
+```text
+goals -> workouts
+```
+
+`goals` consulta:
+
+```http
+GET http://localhost:8003/api/routines
+```
+
+El `valor_actual` es la cantidad de rutinas devueltas por `workouts`.
+
+## Calculo actual
+
+El porcentaje se calcula actualmente como:
+
+```text
+porcentaje_cumplimiento = min(100, (valor_actual / valor_objetivo) * 100)
+```
+
+La meta se marca como cumplida cuando:
+
+```text
+valor_actual >= valor_objetivo
+```
+
+Esto funciona para objetivos crecientes, como completar 5 rutinas. Para objetivos de reduccion, como bajar de 80 kg a 70 kg, la regla debera definirse posteriormente.
+
+## Prueba recomendada en Thunder Client
+
+1. Crear o identificar un usuario en `users` y copiar su `id`.
+2. Crear una medicion en `measurements` si la meta es corporal.
+3. Crear una meta en `goals` usando ese `user_id`.
+4. Consultar `GET /goals/:id?user_id=...`.
+5. Revisar que `valor_actual` provenga de `progress`.
+6. Consultar `GET /progress/:user_id` para comprobar el snapshot.
+
+Para una meta de rutina:
+
+1. Crear una rutina en `workouts`.
+2. Crear en `goals` una meta con `tipo_meta: "rutina"`.
+3. Consultar la meta.
+4. Confirmar que `valor_actual` coincide con la cantidad de rutinas.
+
+## Arranque
+
+Desde `services/goals`:
+
+```powershell
+node src/index.js
+```
+
+El servicio queda disponible en:
+
+```text
+http://localhost:8004
+```
+
+Los archivos `.env` reales son locales y no deben subirse al repositorio. Usa `.env.example` como referencia de las URLs entre servicios.
