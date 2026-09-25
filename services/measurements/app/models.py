@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
-from datetime import date
+from datetime import date as Date
 
 class DateConfidence(str, Enum):
     exact      = "exact"
@@ -30,14 +30,14 @@ class Measurements(BaseModel):
     calf_cm:      Optional[float] = Field(default=None, gt=0)
 
 class MeasurementRecord(BaseModel):
-    date:            date  # Ahora exige formato YYYY-MM-DD
+    date:            Date  # Ahora exige formato YYYY-MM-DD
     date_confidence: DateConfidence = DateConfidence.exact
     data_context:    DataContext    = DataContext.adult_baseline
     measurements:    Measurements
     notes:           Optional[str]  = ""
 
 class MeasurementUpdate(BaseModel):
-    date:            Optional[date]            = None
+    date:            Optional[Date]            = None
     date_confidence: Optional[DateConfidence]  = None
     data_context:    Optional[DataContext]     = None
     notes:           Optional[str]             = None
@@ -49,7 +49,7 @@ class MeasurementUpdate(BaseModel):
             value = getattr(self, field)
             if value is not None:
                 # Convertimos la fecha a string para MongoDB si existe
-                if field == "date" and isinstance(value, date):
+                if field == "date" and isinstance(value, Date):
                     result[field] = value.isoformat()
                 else:
                     result[field] = value
