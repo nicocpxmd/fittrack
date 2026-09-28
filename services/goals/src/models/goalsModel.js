@@ -26,10 +26,10 @@ async function obtenerPorUsuario(userId) {
     return rows;
 }
 
-async function crear({ user_id, tipo_meta, descripcion, valor_objetivo, fecha_limite }) {
+async function crear({ user_id, tipo_meta, descripcion, valor_objetivo, fecha_limite, direccion }) {
     const [result] = await pool.query(
-        'INSERT INTO goals (user_id, tipo_meta, descripcion, valor_objetivo, fecha_limite) VALUES (?, ?, ?, ?, ?)',
-        [user_id, tipo_meta, descripcion, valor_objetivo, fecha_limite]
+        'INSERT INTO goals (user_id, tipo_meta, descripcion, valor_objetivo, fecha_limite, direccion) VALUES (?, ?, ?, ?, ?, ?)',
+        [user_id, tipo_meta, descripcion, valor_objetivo, fecha_limite, direccion]
     );
     return result.insertId;
 }
@@ -38,6 +38,16 @@ async function actualizar(id, { user_id, tipo_meta, descripcion, valor_objetivo,
     const [result] = await pool.query(
         'UPDATE goals SET user_id = ?, tipo_meta = ?, descripcion = ?, valor_objetivo = ?, fecha_limite = ? WHERE id = ?',
         [user_id, tipo_meta, descripcion, valor_objetivo, fecha_limite, id]
+    );
+    return result.affectedRows > 0;
+}
+
+// NUEVO: persiste el progreso calculado contra `progress` en la propia
+// tabla goals, en vez de devolverlo solo en la respuesta HTTP.
+async function actualizarProgreso(id, { valor_actual, porcentaje_cumplimiento, cumplida, valor_inicial }) {
+    const [result] = await pool.query(
+        'UPDATE goals SET valor_actual = ?, porcentaje_cumplimiento = ?, cumplida = ?, valor_inicial = COALESCE(valor_inicial, ?) WHERE id = ?',
+        [valor_actual, porcentaje_cumplimiento, cumplida, valor_inicial, id]
     );
     return result.affectedRows > 0;
 }
@@ -53,5 +63,6 @@ module.exports = {
     obtenerPorUsuario,
     crear,
     actualizar,
+    actualizarProgreso,
     eliminar
 };

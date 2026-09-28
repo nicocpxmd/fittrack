@@ -1,0 +1,134 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FitTrack Goals Service",
+    "version": "1.0.0",
+    "description": "Microservicio de metas. Todas las rutas requieren un token válido emitido por el servicio Users (header Authorization: Bearer <token>). El user_id se deduce del token verificado contra Users /users/me, nunca del cliente. Al consultar una meta (GET /goals/{id}) se recalcula y persiste el progreso contra el servicio progress."
+  },
+  "servers": [{ "url": "http://192.168.100.3:8004" }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token obtenido de POST /users/login en el servicio Users. Goals lo valida llamando a GET /users/me."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/goals": {
+      "post": {
+        "summary": "Crear una meta",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipo_meta": { "type": "string", "example": "weight_kg" },
+                  "descripcion": { "type": "string" },
+                  "valor_objetivo": { "type": "number" },
+                  "fecha_limite": { "type": "string", "format": "date" }
+                },
+                "required": ["tipo_meta", "descripcion", "valor_objetivo", "fecha_limite"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Creada" },
+          "400": { "description": "Faltan datos obligatorios", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "description": "Token faltante, inválido o expirado" }
+        }
+      },
+      "get": {
+        "summary": "Listar metas del usuario autenticado",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "OK" },
+          "401": { "description": "Token faltante, inválido o expirado" }
+        }
+      }
+    },
+    "/goals/admin/all": {
+      "get": {
+        "summary": "Listar todas las metas de todos los usuarios (requiere estar autenticado; sin control de rol admin todavía)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "OK" },
+          "401": { "description": "Token faltante, inválido o expirado" }
+        }
+      }
+    },
+    "/goals/{id}": {
+      "get": {
+        "summary": "Consultar una meta (recalcula y persiste el progreso contra progress)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "OK" },
+          "401": { "description": "Token faltante, inválido o expirado" },
+          "403": { "description": "La meta no pertenece al usuario autenticado" },
+          "404": { "description": "Meta no encontrada" },
+          "502": { "description": "El servicio progress no respondió correctamente" }
+        }
+      },
+      "put": {
+        "summary": "Actualizar una meta",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tipo_meta": { "type": "string" },
+                  "descripcion": { "type": "string" },
+                  "valor_objetivo": { "type": "number" },
+                  "fecha_limite": { "type": "string", "format": "date" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Actualizada" },
+          "401": { "description": "Token faltante, inválido o expirado" },
+          "403": { "description": "No tienes permiso para modificar esta meta" },
+          "404": { "description": "La meta especificada no existe" }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar una meta",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Eliminada" },
+          "401": { "description": "Token faltante, inválido o expirado" },
+          "403": { "description": "No tienes permiso para eliminar esta meta" },
+          "404": { "description": "No se encontró la meta a eliminar" }
+        }
+      }
+    }
+  }
+}
