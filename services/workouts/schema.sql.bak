@@ -1,0 +1,12 @@
+CREATE DATABASE IF NOT EXISTS fittrack_taller;
+USE fittrack_taller;
+
+CREATE TABLE IF NOT EXISTS routines (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    nombre_rutina VARCHAR(150) NOT NULL,
+    tipo_enfoque VARCHAR(100),
+    grupo_muscular VARCHAR(100),
+    ejercicios TEXT,
+    fecha_creacion DATE NOT NULL
+);
