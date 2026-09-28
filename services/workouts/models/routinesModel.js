@@ -1,17 +1,21 @@
 const db = require('../config/db');
 
 const Routines = {
-    getAll: async () => {
-        const [rows] = await db.query('SELECT * FROM routines');
+    getAllByUser: async (userId) => {
+        const [rows] = await db.query('SELECT * FROM routines WHERE user_id = ?', [userId]);
         return rows;
     },
-    create: async (data) => {
+    create: async (userId, data) => {
         const { nombre_rutina, tipo_enfoque, grupo_muscular, ejercicios, fecha_creacion } = data;
         const [result] = await db.query(
-            'INSERT INTO routines (nombre_rutina, tipo_enfoque, grupo_muscular, ejercicios, fecha_creacion) VALUES (?, ?, ?, ?, ?)',
-            [nombre_rutina, tipo_enfoque, grupo_muscular, ejercicios, fecha_creacion]
+            'INSERT INTO routines (user_id, nombre_rutina, tipo_enfoque, grupo_muscular, ejercicios, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)',
+            [userId, nombre_rutina, tipo_enfoque, grupo_muscular, ejercicios, fecha_creacion]
         );
         return result;
+    },
+    getById: async (id) => {
+        const [rows] = await db.query('SELECT * FROM routines WHERE id = ?', [id]);
+        return rows[0] || null;
     },
     update: async (id, data) => {
         const { nombre_rutina, tipo_enfoque, grupo_muscular, ejercicios, fecha_creacion } = data;
@@ -26,5 +30,4 @@ const Routines = {
         return result;
     }
 };
-
 module.exports = Routines;

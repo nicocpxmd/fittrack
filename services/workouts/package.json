@@ -12,6 +12,7 @@
     "dotenv": "^18.0.3",
     "express": "^4.19.2",
     "morgan": "^1.10.0",
-    "mysql2": "^3.9.2"
+    "mysql2": "^3.9.2",
+    "swagger-ui-express": "^5.0.1"
   }
 }
