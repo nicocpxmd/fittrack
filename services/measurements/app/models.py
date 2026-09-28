@@ -3,15 +3,18 @@ from typing import Optional
 from enum import Enum
 from datetime import date as Date
 
+
 class DateConfidence(str, Enum):
-    exact      = "exact"
+    exact = "exact"
     month_only = "month_only"
-    year_only  = "year_only"
+    year_only = "year_only"
+
 
 class DataContext(str, Enum):
     adolescent_growth = "adolescent_growth"
-    transition        = "transition"
-    adult_baseline    = "adult_baseline"
+    transition = "transition"
+    adult_baseline = "adult_baseline"
+
 
 class Measurements(BaseModel):
     # Field(gt=0) asegura que el valor sea mayor a 0
@@ -29,12 +32,14 @@ class Measurements(BaseModel):
     lower_leg_cm: Optional[float] = Field(default=None, gt=0)
     calf_cm:      Optional[float] = Field(default=None, gt=0)
 
+
 class MeasurementRecord(BaseModel):
     date:            Date  # Ahora exige formato YYYY-MM-DD
     date_confidence: DateConfidence = DateConfidence.exact
     data_context:    DataContext    = DataContext.adult_baseline
     measurements:    Measurements
     notes:           Optional[str]  = ""
+
 
 class MeasurementUpdate(BaseModel):
     date:            Optional[Date]            = None
@@ -53,8 +58,10 @@ class MeasurementUpdate(BaseModel):
                     result[field] = value.isoformat()
                 else:
                     result[field] = value
+
         if self.measurements is not None:
             for k, v in self.measurements.model_dump().items():
                 if v is not None:
                     result[f"measurements.{k}"] = v
+
         return result

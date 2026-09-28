@@ -9,5 +9,5 @@ DB_NAME = os.getenv("DB_NAME", "fitness_tracker")
 
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
-
 measurements = db["measurements"]
+
