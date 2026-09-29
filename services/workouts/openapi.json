@@ -1,0 +1,57 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FitTrack Workouts/Routines Service",
+    "version": "1.0.0",
+    "description": "Microservicio de rutinas. Todas las rutas requieren Authorization: Bearer <token> emitido por Users."
+  },
+  "servers": [{ "url": "http://192.168.100.3:8003" }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/api/routines": {
+      "get": {
+        "summary": "Listar las rutinas del usuario autenticado",
+        "responses": { "200": { "description": "OK" }, "401": { "description": "Token inválido" } }
+      },
+      "post": {
+        "summary": "Crear una rutina",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre_rutina": { "type": "string" },
+                  "tipo_enfoque": { "type": "string" },
+                  "grupo_muscular": { "type": "string" },
+                  "ejercicios": { "type": "string" },
+                  "fecha_creacion": { "type": "string", "format": "date" }
+                },
+                "required": ["nombre_rutina", "fecha_creacion"]
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Creada" }, "401": { "description": "Token inválido" } }
+      }
+    },
+    "/api/routines/{id}": {
+      "put": {
+        "summary": "Actualizar una rutina propia",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Actualizada" }, "403": { "description": "No es tu rutina" }, "404": { "description": "No existe" } }
+      },
+      "delete": {
+        "summary": "Eliminar una rutina propia",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Eliminada" }, "403": { "description": "No es tu rutina" }, "404": { "description": "No existe" } }
+      }
+    }
+  }
+}
