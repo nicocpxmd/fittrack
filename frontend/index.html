@@ -1,13 +1,140 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FitTrack</title>
+<style>
+:root{--bg:#eef2f6;--card:#fff;--ink:#172431;--mut:#5f6f7d;--acc:#0e7c86;--bar:#f2b134;--line:#d6dee6;--err:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 "Avenir Next","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:12px 20px;display:flex;gap:12px;align-items:center}
+header b{font-size:20px;margin-right:auto}
+main{max-width:920px;margin:20px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:17px}
+nav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+nav button{background:#fff;color:var(--ink);border:1px solid var(--line)}
+nav button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+input,select,textarea,button{font:inherit;padding:8px 10px;border-radius:6px;border:1px solid var(--line)}
+button{background:var(--acc);color:#fff;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.del{background:#fff;color:var(--err);border:1px solid var(--err);padding:3px 8px}
+button.alt{background:#fff;color:var(--acc);border:1px solid var(--acc);padding:3px 8px}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+label{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:3px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+td,th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:top}
+.pre{white-space:pre-line}
+.bar{background:var(--line);border-radius:5px;height:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--bar)}
+#msg{padding:8px 12px;border-radius:6px;margin-bottom:12px;display:none}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header><b>FitTrack</b><span id="who"></span><button id="out" class="hide">Cerrar sesión</button></header>
+<main>
+<div id="msg" role="status"></div>
+<section id="auth" class="hide">
+  <div class="card"><h2>Iniciar sesión</h2>
+    <form id="lf"><label>Correo<input type="email" name="email" required></label><label>Contraseña<input type="password" name="password" required></label><button>Entrar</button></form></div>
+  <div class="card"><h2>Crear cuenta</h2>
+    <form id="rf"><label>Nombre completo<input name="full_name" required></label><label>Correo<input type="email" name="email" required></label><label>Contraseña<input type="password" name="password" required minlength="8"></label><button>Registrarme</button></form></div>
+</section>
+<section id="app" class="hide">
+  <nav id="nav"><button data-v="meas">Medidas</button><button data-v="prog">Progreso</button><button data-v="goals">Metas</button><button data-v="work">Rutinas</button></nav>
+  <div id="view"></div>
+</section>
+</main>
+<script>
+const API={users:'/api/users',meas:'/api/measurements',prog:'/api/progress',goals:'/api/goals',work:'/api/workouts'};
+const FIELDS={weight_kg:'Peso (kg)',height_cm:'Altura (cm)',neck_cm:'Cuello (cm)',shoulder_cm:'Hombros (cm)',chest_cm:'Pecho (cm)',arm_cm:'Brazo (cm)',forearm_cm:'Antebrazo (cm)',waist_cm:'Cintura (cm)',abdomen_cm:'Abdomen (cm)',hip_cm:'Cadera (cm)',upper_leg_cm:'Muslo (cm)',lower_leg_cm:'Pierna inferior (cm)',calf_cm:'Pantorrilla (cm)'};
+const opts=Object.entries(FIELDS).map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const d10=s=>String(s||'').slice(0,10);
+const today=new Date().toLocaleDateString('en-CA');
+let token=localStorage.getItem('token');
+
+function msg(t,ok){const m=$('#msg');m.textContent=t;m.style.display='block';m.style.background=ok?'#dff1ec':'#fbe4e2';clearTimeout(msg.t);msg.t=setTimeout(()=>m.style.display='none',4000)}
+async function api(url,opt={}){
+  const h={'Content-Type':'application/json'};
+  if(token)h.Authorization='Bearer '+token;
+  const r=await fetch(url,{...opt,headers:h,body:opt.body?JSON.stringify(opt.body):undefined});
+  if(r.status===401&&token){logout();throw new Error('Tu sesión expiró. Inicia sesión de nuevo.')}
+  if(r.status===204)return null;
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok){const e=d.detail??d.error;throw new Error(typeof e==='string'?e:e?.[0]?.msg||'Error '+r.status)}
+  return d;
+}
+const form=e=>{e.preventDefault();return Object.fromEntries(new FormData(e.target))};
+
+async function auth(reg,e){
+  const f=form(e);
+  try{
+    if(reg)await api(API.users+'/register',{method:'POST',body:f});
+    const t=await api(API.users+'/login',{method:'POST',body:{email:f.email,password:f.password}});
+    token=t.access_token;localStorage.setItem('token',token);start();
+  }catch(x){msg(x.message)}
+}
+function logout(){token=null;localStorage.removeItem('token');start()}
+
+async function vMeas(){
+  $('#view').innerHTML=`<div class="card"><h2>Registrar medidas</h2><form id="f"><label>Fecha<input type="date" name="date" required value="${today}"></label>${Object.entries(FIELDS).map(([k,l])=>`<label>${l}<input type="number" step="any" min="0.01" name="${k}"></label>`).join('')}<button>Guardar medidas</button></form></div><div class="card tw"><table id="t"></table></div>`;
+  let editId=null;
+  $('#f').onsubmit=async e=>{const f=form(e),m={};for(const k in FIELDS)if(f[k]!=='')m[k]=+f[k];
+    if(!Object.keys(m).length)return msg('Ingresa al menos una medida.');
+    try{if(editId){await api(API.meas+'/'+editId,{method:'PUT',body:{date:f.date,measurements:m}});msg('Medidas actualizadas',1)}else{await api(API.meas+'/',{method:'POST',body:{date:f.date,measurements:m}});msg('Medidas guardadas',1)}vMeas()}catch(x){msg(x.message)}};
+  const rows=await api(API.meas+'/');
+  $('#t').innerHTML='<tr><th>Fecha</th><th>Medidas</th><th></th></tr>'+(rows.length?rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${Object.entries(r.measurements).filter(([,v])=>v!=null).map(([k,v])=>`${esc(FIELDS[k]||k)}: ${esc(v)}`).join(', ')}</td><td><button class="alt" data-a="ed" data-id="${esc(r.id)}">Editar</button> <button class="del" data-id="${esc(r.id)}">Eliminar</button></td></tr>`).join(''):'<tr><td colspan="3">Aún no tienes medidas. Registra la primera arriba.</td></tr>');
+  $('#t').onclick=async e=>{const {a,id}=e.target.dataset;if(!id)return;
+    if(a==='ed'){const r=rows.find(x=>String(x.id)===id);if(!r)return;const f=$('#f');f.elements.date.value=d10(r.date);for(const k in FIELDS)f.elements[k].value=r.measurements[k]??'';editId=id;$('#view h2').textContent='Editar medidas (los campos vacíos se conservan)';f.querySelector('button').textContent='Guardar cambios';if(!f.querySelector('.cancel')){const c=document.createElement('button');c.type='button';c.className='alt cancel';c.textContent='Cancelar';c.onclick=vMeas;f.appendChild(c)}f.scrollIntoView();return}
+    if(!confirm('¿Eliminar esta medida?'))return;try{await api(API.meas+'/'+id,{method:'DELETE'});msg('Medida eliminada',1);vMeas()}catch(x){msg(x.message)}};
+}
+
+async function vProg(){
+  $('#view').innerHTML=`<div class="card"><h2>Calcular progreso</h2><form id="f"><label>Medida<select name="tipo_medida">${opts}</select></label><label>Desde<input type="date" name="desde" required></label><label>Hasta<input type="date" name="hasta" required value="${today}"></label><button>Calcular y guardar</button></form></div><div class="card tw"><table id="t"></table></div>`;
+  $('#f').onsubmit=async e=>{try{await api(API.prog+'/calculate',{method:'POST',body:form(e)});msg('Progreso guardado',1);vProg()}catch(x){msg(x.message)}};
+  const rows=await api(API.prog+'/me');
+  $('#t').innerHTML='<tr><th>Medida</th><th>Inicial</th><th>Actual</th><th>Cambio</th><th>Periodo</th><th></th></tr>'+(rows.length?rows.map(r=>`<tr><td>${esc(FIELDS[r.tipo_medida]||r.tipo_medida)}</td><td>${esc(r.valor_inicial)}</td><td>${esc(r.valor_actual)}</td><td>${r.diferencia>0?'+':''}${esc(r.diferencia)}</td><td>${esc(r.fecha_inicio)} a ${esc(r.fecha_fin)}</td><td><button class="del" data-id="${esc(r.id)}">Eliminar</button></td></tr>`).join(''):'<tr><td colspan="6">Aún no hay progreso guardado. Calcula el primero arriba.</td></tr>');
+  $('#t').onclick=async e=>{const id=e.target.dataset.id;if(!id||!confirm('¿Eliminar este registro de progreso?'))return;try{await api(API.prog+'/'+id,{method:'DELETE'});msg('Progreso eliminado',1);vProg()}catch(x){msg(x.message)}};
+}
+
+async function vGoals(){
+  $('#view').innerHTML=`<div class="card"><h2>Nueva meta</h2><form id="f"><label>Medida<select name="tipo_meta">${opts}</select></label><label>Objetivo<select name="direccion"><option value="subir">Subir</option><option value="bajar">Bajar</option></select></label><label>Descripción<input name="descripcion" required></label><label>Valor objetivo<input type="number" step="any" min="0.01" name="valor_objetivo" required></label><label>Fecha límite<input type="date" name="fecha_limite" required></label><button>Crear meta</button></form></div><div class="card tw"><table id="t"></table></div>`;
+  let editId=null;
+  $('#f').onsubmit=async e=>{const f=form(e);f.valor_objetivo=+f.valor_objetivo;try{if(editId){await api(API.goals+'/'+editId,{method:'PUT',body:{descripcion:f.descripcion,valor_objetivo:f.valor_objetivo,fecha_limite:f.fecha_limite}});try{await api(API.goals+'/'+editId)}catch{}msg('Meta actualizada',1)}else{await api(API.goals+'/',{method:'POST',body:f});msg('Meta creada',1)}vGoals()}catch(x){msg(x.message)}};
+  const rows=await api(API.goals+'/');
+  $('#t').innerHTML='<tr><th>Meta</th><th>Avance</th><th>Límite</th><th></th></tr>'+(rows.length?rows.map(g=>{const p=Number(g.porcentaje_cumplimiento)||0;return `<tr><td>${esc(g.descripcion)}<br><small>${esc(FIELDS[g.tipo_meta]||g.tipo_meta)}: ${esc(Number(g.valor_actual))} de ${esc(Number(g.valor_objetivo))}</small></td><td style="min-width:120px"><div class="bar"><i style="width:${p}%"></i></div>${p}%${g.cumplida?' (cumplida)':''}</td><td>${esc(d10(g.fecha_limite))}</td><td><button class="alt" data-a="up" data-id="${g.id}">Actualizar avance</button> <button class="alt" data-a="ed" data-id="${g.id}">Editar</button> <button class="del" data-a="del" data-id="${g.id}">Eliminar</button></td></tr>`}).join(''):'<tr><td colspan="4">Aún no tienes metas. Crea la primera arriba.</td></tr>');
+  $('#t').onclick=async e=>{const {a,id}=e.target.dataset;if(!a)return;
+    try{if(a==='ed'){const g=rows.find(x=>String(x.id)===id);if(!g)return;const f=$('#f');f.elements.tipo_meta.value=g.tipo_meta;f.elements.direccion.value=g.direccion;f.elements.descripcion.value=g.descripcion;f.elements.valor_objetivo.value=Number(g.valor_objetivo);f.elements.fecha_limite.value=d10(g.fecha_limite);f.elements.tipo_meta.disabled=true;f.elements.direccion.disabled=true;editId=id;$('#view h2').textContent='Editar meta (la medida y subir/bajar no se cambian)';f.querySelector('button').textContent='Guardar cambios';if(!f.querySelector('.cancel')){const c=document.createElement('button');c.type='button';c.className='alt cancel';c.textContent='Cancelar';c.onclick=vGoals;f.appendChild(c)}f.scrollIntoView();return}if(a==='up'){await api(API.goals+'/'+id);msg('Avance actualizado',1)}else{if(!confirm('¿Eliminar esta meta?'))return;await api(API.goals+'/'+id,{method:'DELETE'});msg('Meta eliminada',1)}vGoals()}catch(x){msg(x.message)}};
+}
+
+async function vWork(){
+  $('#view').innerHTML=`<div class="card"><h2>Nueva rutina</h2><form id="f"><label>Nombre<input name="nombre_rutina" required></label><label>Enfoque<input name="tipo_enfoque" placeholder="fuerza, hipertrofia..."></label><label>Grupo muscular<input name="grupo_muscular"></label><label>Fecha<input type="date" name="fecha_creacion" required value="${today}"></label><label style="grid-column:1/-1">Ejercicios<textarea name="ejercicios" rows="3" placeholder="Press banca 4x8"></textarea></label><button>Guardar rutina</button></form></div><div class="card tw"><table id="t"></table></div>`;
+  let editId=null;
+  $('#f').onsubmit=async e=>{try{const b=form(e);if(editId){await api(API.work+'/'+editId,{method:'PUT',body:b});msg('Rutina actualizada',1)}else{await api(API.work+'/',{method:'POST',body:b});msg('Rutina guardada',1)}vWork()}catch(x){msg(x.message)}};
+  const rows=await api(API.work+'/');
+  $('#t').innerHTML='<tr><th>Rutina</th><th>Ejercicios</th><th>Fecha</th><th></th></tr>'+(rows.length?rows.map(r=>`<tr><td>${esc(r.nombre_rutina)}<br><small>${esc(r.tipo_enfoque)} ${esc(r.grupo_muscular)}</small></td><td class="pre">${esc(r.ejercicios)}</td><td>${esc(d10(r.fecha_creacion))}</td><td><button class="alt" data-a="ed" data-id="${r.id}">Editar</button> <button class="del" data-id="${r.id}">Eliminar</button></td></tr>`).join(''):'<tr><td colspan="4">Aún no tienes rutinas. Guarda la primera arriba.</td></tr>');
+  $('#t').onclick=async e=>{const {a,id}=e.target.dataset;if(!id)return;
+    if(a==='ed'){const r=rows.find(x=>String(x.id)===id);if(!r)return;const f=$('#f');for(const k of ['nombre_rutina','tipo_enfoque','grupo_muscular','ejercicios'])f.elements[k].value=r[k]??'';f.elements.fecha_creacion.value=d10(r.fecha_creacion);editId=id;$('#view h2').textContent='Editar rutina';f.querySelector('button').textContent='Guardar cambios';if(!f.querySelector('.cancel')){const c=document.createElement('button');c.type='button';c.className='alt cancel';c.textContent='Cancelar';c.onclick=vWork;f.appendChild(c)}f.scrollIntoView();return}
+    if(!confirm('¿Eliminar esta rutina?'))return;try{await api(API.work+'/'+id,{method:'DELETE'});msg('Rutina eliminada',1);vWork()}catch(x){msg(x.message)}};
+}
+
+const V={meas:vMeas,prog:vProg,goals:vGoals,work:vWork};
+async function show(v){document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));try{await V[v]()}catch(x){msg(x.message)}}
+async function start(){
+  $('#auth').classList.toggle('hide',!!token);$('#app').classList.toggle('hide',!token);$('#out').classList.toggle('hide',!token);
+  $('#who').textContent='';
+  if(!token)return;
+  try{$('#who').textContent=(await api(API.users+'/me')).full_name}catch{return}
+  show('meas');
+}
+$('#lf').onsubmit=e=>auth(false,e);$('#rf').onsubmit=e=>auth(true,e);
+$('#nav').onclick=e=>e.target.dataset.v&&show(e.target.dataset.v);$('#out').onclick=logout;
+start();
+</script>
+</body>
 </html>

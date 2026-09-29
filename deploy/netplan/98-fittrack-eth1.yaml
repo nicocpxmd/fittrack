@@ -1,0 +1,8 @@
+network:
+  version: 2
+  ethernets:
+    eth1:
+      routes:
+        - to: 192.168.100.2/32
+          scope: link
+          metric: 10

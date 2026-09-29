@@ -1,0 +1,14 @@
+[Unit]
+Description=FitTrack goals
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+User=vagrant
+WorkingDirectory=/home/vagrant/fittrack_taller/services/goals
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
