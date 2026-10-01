@@ -19,7 +19,10 @@ async function calcularProgresoActual(goal, token) {
         );
 
         if (response.data && response.data.valor_actual != null) {
-            return Number(response.data.valor_actual);
+            return {
+		valorActual: Number(response.data.valor_actual),
+		valorInicial: response.data.valor_inicial != null ? Number(response.data.valor_inicial) : null
+	   };
         }
         throw new Error('El servicio progress devolvió una respuesta sin valor_actual.');
     } catch (progressError) {
@@ -97,12 +100,13 @@ router.get('/goals/:id', async (req, res) => {
             return res.status(403).json({ error: "La meta no pertenece al usuario autenticado." });
         }
 
-        const valorActual = await calcularProgresoActual(meta, req.token);
-        if (valorActual === null) {
+        const resultado = await calcularProgresoActual(meta, req.token);
+        if (resultado === null) {
             return res.status(200).json({ ...meta, sin_medidas: true });
         }
         const objetivo = Number(meta.valor_objetivo);
-        const inicial = meta.valor_inicial != null ? Number(meta.valor_inicial) : valorActual;
+	const valorActual = resultado.valorActual;
+        const inicial = meta.valor_inicial != null ? Number(meta.valor_inicial) : resultado.valorInicial;
         const bajar = meta.direccion === 'bajar';
         const cumplida = bajar ? valorActual <= objetivo : valorActual >= objetivo;
         const recorrido = bajar ? inicial - valorActual : valorActual - inicial;
