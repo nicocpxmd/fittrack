@@ -18,7 +18,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 @router.post("/register", response_model=models.UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user: models.UserCreate, db: Session = Depends(get_db)):
+def register(user: models.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(schemas.User).filter(schemas.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -34,7 +34,7 @@ async def register(user: models.UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login")
-async def login(credentials: models.UserLogin, db: Session = Depends(get_db)):
+def login(credentials: models.UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(schemas.User).filter(schemas.User.email == credentials.email).first()
     
     
@@ -53,7 +53,7 @@ async def get_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 @router.put("/me")
-async def update_me(update_data: models.UserUpdate, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_me(update_data: models.UserUpdate, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     update_dict = update_data.model_dump(exclude_unset=True)
     if not update_dict:
         raise HTTPException(status_code=400, detail="No update data provided")
@@ -68,7 +68,7 @@ async def update_me(update_data: models.UserUpdate, current_user: schemas.User =
 
 
 @router.post("/password-recovery", status_code=status.HTTP_202_ACCEPTED)
-async def recover_password(recovery_data: models.PasswordRecovery, db: Session = Depends(get_db)):
+def recover_password(recovery_data: models.PasswordRecovery, db: Session = Depends(get_db)):
     user = db.query(schemas.User).filter(schemas.User.email == recovery_data.email).first()
     
     if user:
@@ -82,7 +82,7 @@ async def recover_password(recovery_data: models.PasswordRecovery, db: Session =
 
 
 @router.post("/password-reset")
-async def reset_password(reset_data: models.PasswordReset, db: Session = Depends(get_db)):
+def reset_password(reset_data: models.PasswordReset, db: Session = Depends(get_db)):
     user_id = verify_reset_token(reset_data.token)
     if not user_id:
 
