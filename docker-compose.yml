@@ -1,0 +1,113 @@
+services:
+  nginx:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on: [users, measurements, progress, workouts, goals]
+    restart: unless-stopped
+
+  users:
+    build: ./services/users
+    environment:
+      DATABASE_URL: postgresql+psycopg://fittrack:${POSTGRES_PASSWORD}@postgres:5432/fittrack_users
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  measurements:
+    build: ./services/measurements
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: fittrack_measurements
+      USERS_SERVICE_URL: http://users:8002
+    depends_on: [users, mongo]
+    restart: unless-stopped
+
+  progress:
+    build: ./services/progress
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: fittrack_progress
+      USERS_SERVICE_URL: http://users:8002
+      MEASUREMENTS_SERVICE_URL: http://measurements:8001
+    depends_on: [users, measurements, mongo]
+    restart: unless-stopped
+
+  workouts:
+    build: ./services/workouts
+    environment:
+      PORT: "8003"
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: workouts
+      USERS_SERVICE_URL: http://users:8002
+    depends_on:
+      users:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  goals:
+    build: ./services/goals
+    environment:
+      GOALS_PORT: "8004"
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: goals
+      USERS_SERVICE_URL: http://users:8002
+      PROGRESS_SERVICE_URL: http://progress:8005
+      WORKOUTS_SERVICE_URL: http://workouts:8003
+      MEASUREMENTS_SERVICE_URL: http://measurements:8001
+    depends_on:
+      progress:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: fittrack
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: fittrack_users
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fittrack -d fittrack_users"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:4.4
+    volumes:
+      - mongodata:/data/db
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./docker/mysql-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+      - ./services/goals/schema.sql:/schemas/goals.sql:ro
+      - ./services/workouts/schema.sql:/schemas/workouts.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  mongodata:
+  mysqldata:
