@@ -10,8 +10,20 @@ x-servidor: &servidor
 services:
   nginx:
     image: nicocpxm/fittrack-nginx:v1
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+      placement:
+        constraints:
+          - node.hostname == clienteUbuntu
+
+  haproxy:
+    image: nicocpxm/fittrack-haproxy:v1
     ports:
       - "8080:80"
+      - "8404:8404"
     deploy:
       replicas: 1
       restart_policy:
@@ -22,7 +34,7 @@ services:
           - node.hostname == clienteUbuntu
 
   users:
-    image: nicocpxm/fittrack-users:v1
+    image: nicocpxm/fittrack-users:v2
     environment:
       DATABASE_URL: postgresql+psycopg://fittrack:${POSTGRES_PASSWORD}@postgres:5432/fittrack_users
       SECRET_KEY: ${SECRET_KEY}
