@@ -1,9 +1,16 @@
 services:
   nginx:
     build: ./frontend
+    restart: unless-stopped
+
+  haproxy:
+    image: haproxy:2.3
     ports:
       - "8080:80"
-    depends_on: [users, measurements, progress, workouts, goals]
+      - "8404:8404"
+    volumes:
+      - ./haproxy/haproxy.compose.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on: [nginx, users, measurements, progress, workouts, goals]
     restart: unless-stopped
 
   users:
