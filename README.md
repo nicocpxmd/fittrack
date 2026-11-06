@@ -70,10 +70,10 @@ El `.env` **no se versiona**.
 Las imágenes base ya están publicadas. Si se cambia el frontend, HAProxy o el servicio de analítica:
 
 ```bash
-docker build -t nicocpxm/fittrack-nginx:v3 ./frontend
+docker build -t nicocpxm/fittrack-nginx:v4 ./frontend
 docker build -t nicocpxm/fittrack-haproxy:v2 ./haproxy
 docker build -t nicocpxm/fittrack-analytics:v1 ./analytics
-docker push nicocpxm/fittrack-nginx:v3
+docker push nicocpxm/fittrack-nginx:v4
 docker push nicocpxm/fittrack-haproxy:v2
 docker push nicocpxm/fittrack-analytics:v1
 ```
@@ -170,10 +170,10 @@ Resultados de referencia con 100.000 usuarios:
 cd /root/fittrack
 docker build -t nicocpxm/fittrack-analytics:v1 ./analytics
 docker build -t nicocpxm/fittrack-haproxy:v2 ./haproxy
-docker build -t nicocpxm/fittrack-nginx:v3 ./frontend
+docker build -t nicocpxm/fittrack-nginx:v4 ./frontend
 docker push nicocpxm/fittrack-analytics:v1
 docker push nicocpxm/fittrack-haproxy:v2
-docker push nicocpxm/fittrack-nginx:v3
+docker push nicocpxm/fittrack-nginx:v4
 set -a; . ./.env; set +a
 docker stack deploy -c docker-stack.yml fittrack
 ```
