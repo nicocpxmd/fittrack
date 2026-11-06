@@ -62,6 +62,7 @@ def main():
     spark = (
         SparkSession.builder.appName("fittrack-analytics")
         .config("spark.sql.shuffle.partitions", "8")
+        .config("spark.sql.ansi.enabled", "false")
         .getOrCreate()
     )
     spark.sparkContext.setLogLevel("WARN")

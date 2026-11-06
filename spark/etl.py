@@ -48,8 +48,8 @@ def read_csv(spark, path, columns):
 def fecha_col(name):
     """Acepta ISO (aaaa-mm-dd) y dd/mm/aaaa; devuelve una fecha."""
     return F.coalesce(
-        F.to_date(F.col(name), "yyyy-MM-dd"),
-        F.to_date(F.col(name), "dd/MM/yyyy"),
+        F.try_to_date(F.col(name), "yyyy-MM-dd"),
+        F.try_to_date(F.col(name), "dd/MM/yyyy"),
     )
 
 
@@ -58,6 +58,8 @@ def main():
     spark = (
         SparkSession.builder.appName("fittrack-etl")
         .config("spark.sql.shuffle.partitions", "8")
+        # El dataset trae suciedad controlada: preferimos null a excepcion.
+        .config("spark.sql.ansi.enabled", "false")
         .getOrCreate()
     )
     spark.sparkContext.setLogLevel("WARN")
@@ -94,8 +96,8 @@ def main():
     medidas = medidas_raw.dropDuplicates(["medida_id"])
 
     medidas = (
-        medidas.withColumn("fecha_iso", F.to_date(F.col("fecha"), "yyyy-MM-dd"))
-        .withColumn("fecha_alt", F.to_date(F.col("fecha"), "dd/MM/yyyy"))
+        medidas.withColumn("fecha_iso", F.try_to_date(F.col("fecha"), "yyyy-MM-dd"))
+        .withColumn("fecha_alt", F.try_to_date(F.col("fecha"), "dd/MM/yyyy"))
         .withColumn("fecha", F.coalesce(F.col("fecha_iso"), F.col("fecha_alt")))
         .withColumn("peso_raw", F.col("peso").cast("double"))
         .withColumn("cintura", F.col("cintura").cast("double"))
@@ -144,8 +146,8 @@ def main():
     duplicados_rutinas = total_rutinas - rutinas_raw.select("rutina_id").distinct().count()
     rutinas = rutinas_raw.dropDuplicates(["rutina_id"])
     rutinas = (
-        rutinas.withColumn("fecha_iso", F.to_date(F.col("fecha"), "yyyy-MM-dd"))
-        .withColumn("fecha_alt", F.to_date(F.col("fecha"), "dd/MM/yyyy"))
+        rutinas.withColumn("fecha_iso", F.try_to_date(F.col("fecha"), "yyyy-MM-dd"))
+        .withColumn("fecha_alt", F.try_to_date(F.col("fecha"), "dd/MM/yyyy"))
         .withColumn("fecha", F.coalesce(F.col("fecha_iso"), F.col("fecha_alt")))
         .withColumn("duracion_min", F.col("duracion_min").cast("int"))
         .withColumn("num_ejercicios", F.col("num_ejercicios").cast("int"))
