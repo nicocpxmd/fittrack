@@ -152,6 +152,7 @@ def main():
         .withColumn("duracion_min", F.col("duracion_min").cast("int"))
         .withColumn("num_ejercicios", F.col("num_ejercicios").cast("int"))
         .withColumn("intensidad", F.col("intensidad").cast("int"))
+        .withColumn("anio", F.year("fecha"))
     )
     fechas_otro_formato_rutinas = rutinas.filter(
         F.col("fecha_iso").isNull() & F.col("fecha_alt").isNotNull()
