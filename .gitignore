@@ -25,3 +25,8 @@ Thumbs.db
 
 #txt
 estructura.txtservices/workouts/.env
+
+# Proyecto final: artefactos generados
+analytics/curated/
+analytics/data/
+tests/load/*.json

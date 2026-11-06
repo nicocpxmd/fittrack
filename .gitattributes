@@ -1,0 +1,3 @@
+# Los scripts se ejecutan en Linux: forzar LF evita el clasico error "\r".
+*.sh text eol=lf
+*.py text eol=lf
