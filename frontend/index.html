@@ -31,6 +31,14 @@ td,th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;font-s
 .bar i{display:block;height:100%;background:var(--bar)}
 #msg{padding:8px 12px;border-radius:6px;margin-bottom:12px;display:none}
 .hide{display:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:12px}
+.kpi b{display:block;font-size:22px;color:var(--acc)}
+.kpi span{font-size:12px;color:var(--mut)}
+.note{font-size:12px;color:var(--mut);margin:8px 0 0}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.ok{background:#dff1ec;color:#0e7c86}
+.warn{background:#fdecc8;color:#8a5a00}
 </style>
 </head>
 <body>
@@ -44,12 +52,12 @@ td,th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;font-s
     <form id="rf"><label>Nombre completo<input name="full_name" required></label><label>Correo<input type="email" name="email" required></label><label>Contraseña<input type="password" name="password" required minlength="8"></label><button>Registrarme</button></form></div>
 </section>
 <section id="app" class="hide">
-  <nav id="nav"><button data-v="meas">Medidas</button><button data-v="prog">Progreso</button><button data-v="goals">Metas</button><button data-v="work">Rutinas</button></nav>
+  <nav id="nav"><button data-v="meas">Medidas</button><button data-v="prog">Progreso</button><button data-v="goals">Metas</button><button data-v="work">Rutinas</button><button data-v="analytics">Analítica</button></nav>
   <div id="view"></div>
 </section>
 </main>
 <script>
-const API={users:'/api/users',meas:'/api/measurements',prog:'/api/progress',goals:'/api/goals',work:'/api/workouts'};
+const API={users:'/api/users',meas:'/api/measurements',prog:'/api/progress',goals:'/api/goals',work:'/api/workouts',analytics:'/api/analytics'};
 const FIELDS={weight_kg:'Peso (kg)',height_cm:'Altura (cm)',neck_cm:'Cuello (cm)',shoulder_cm:'Hombros (cm)',chest_cm:'Pecho (cm)',arm_cm:'Brazo (cm)',forearm_cm:'Antebrazo (cm)',waist_cm:'Cintura (cm)',abdomen_cm:'Abdomen (cm)',hip_cm:'Cadera (cm)',upper_leg_cm:'Muslo (cm)',lower_leg_cm:'Pierna inferior (cm)',calf_cm:'Pantorrilla (cm)'};
 const opts=Object.entries(FIELDS).map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
 const $=s=>document.querySelector(s);
@@ -123,7 +131,61 @@ async function vWork(){
     if(!confirm('¿Eliminar esta rutina?'))return;try{await api(API.work+'/'+id,{method:'DELETE'});msg('Rutina eliminada',1);vWork()}catch(x){msg(x.message)}};
 }
 
-const V={meas:vMeas,prog:vProg,goals:vGoals,work:vWork};
+async function vAnalytics(){
+  const d=await api(API.analytics+'/dashboard');
+  const k=d.kpis||{}, ret=d.retencion||{}, goals=(d.metas&&d.metas.por_objetivo)||[], weight=(d.peso&&d.peso.por_objetivo)||[], season=(d.estacionalidad&&d.estacionalidad.registros_por_mes)||[], routines=(d.rutinas&&d.rutinas.por_tipo)||[], val=d.validacion||{}, cohorts=ret.por_cohorte||[];
+  const pct=x=>`${(Number(x||0)*100).toFixed(1)}%`;
+  const bar=(x,color)=>`<div class="bar"><i style="width:${Math.max(0,Math.min(100,Number(x||0)*100))}%;background:${color||'var(--bar)'}"></i></div>`;
+  const maxSeason=Math.max(1,...season.map(s=>Number(s.count)||0));
+  const tag=(ok,text)=>`<span class="tag ${ok?'ok':'warn'}">${esc(text)}</span>`;
+  $('#view').innerHTML=`
+    <div class="card"><h2>Resumen del análisis</h2>
+      <div class="kpis">
+        <div class="kpi"><b>${esc(k.usuarios??'-')}</b><span>Usuarios</span></div>
+        <div class="kpi"><b>${esc(k.usuarios_activos_12s??'-')}</b><span>Activos 12 semanas</span></div>
+        <div class="kpi"><b>${esc(k.promedio_sesiones_semana??'-')}</b><span>Sesiones/semana</span></div>
+        <div class="kpi"><b>${pct(k.tasa_cumplimiento_metas)}</b><span>Metas cumplidas</span></div>
+        <div class="kpi"><b>${esc(k.cambio_promedio_peso_kg??'-')} kg</b><span>Cambio promedio</span></div>
+      </div>
+      <p class="note">Generado ${esc(d.generated_at||'')} · ${esc(k.usuarios??0)} usuarios · ${esc(d.dataset?.filas_total??0)} filas</p>
+    </div>
+    <div class="card"><h2>Retención por semanas</h2>
+      <table><tr><th>Periodo</th><th>Retención</th><th></th></tr>
+        ${[['4 semanas',ret.despues_4_semanas],['12 semanas',ret.despues_12_semanas],['26 semanas',ret.despues_26_semanas]].map(([l,v])=>`<tr><td>${l}</td><td>${pct(v)}</td><td>${bar(v)}</td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="card"><h2>Retención a 12 semanas por cohorte</h2>
+      <div class="tw"><table><tr><th>Cohorte</th><th>Usuarios</th><th>Retención 12s</th><th></th></tr>
+        ${cohorts.map(c=>`<tr><td>${esc(c.cohorte)}</td><td>${esc(c.usuarios)}</td><td>${pct(c.retencion_12s)}</td><td>${bar(c.retencion_12s)}</td></tr>`).join('')}
+      </table></div>
+      <p class="note">Las cohortes desde 2026-04 no tienen 12 semanas completas; su retención está subestimada.</p>
+    </div>
+    <div class="card"><h2>Cumplimiento de metas por objetivo</h2>
+      <table><tr><th>Objetivo</th><th>Metas</th><th>Cumplidas</th><th>Tasa</th><th></th></tr>
+        ${goals.map(g=>`<tr><td>${esc(g.objetivo_fitness)}</td><td>${esc(g.metas)}</td><td>${esc(g.cumplidas)}</td><td>${pct(g.tasa_cumplimiento)}</td><td>${bar(g.tasa_cumplimiento)}</td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="card"><h2>Cambio de peso por objetivo</h2>
+      <table><tr><th>Objetivo</th><th>Usuarios</th><th>Cambio medio</th><th>Correlación sesiones</th></tr>
+        ${weight.map(w=>`<tr><td>${esc(w.objetivo_fitness)}</td><td>${esc(w.usuarios)}</td><td>${Number(w.cambio_promedio_kg).toFixed(2)} kg</td><td>${Number(w.correlacion_sesiones).toFixed(3)}</td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="card"><h2>Registros por mes</h2>
+      <div class="tw"><table><tr><th>Mes</th><th>Registros</th><th></th></tr>
+        ${season.map(s=>`<tr><td>${esc(s.mes)}</td><td>${esc(s.count)}</td><td>${bar(Number(s.count)/maxSeason)}</td></tr>`).join('')}
+      </table></div>
+    </div>
+    <div class="card"><h2>Rutinas por tipo</h2>
+      <table><tr><th>Tipo</th><th>Sesiones</th><th>Duración media</th><th>Intensidad media</th></tr>
+        ${routines.map(r=>`<tr><td>${esc(r.tipo_enfoque)}</td><td>${esc(r.sesiones)}</td><td>${esc(r.duracion_promedio_min)} min</td><td>${esc(r.intensidad_promedio)}</td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="card"><h2>Validación contra los patrones sembrados</h2>
+      <p>${tag(Number(val.abandono_temprano_pct)>=0.25&&Number(val.abandono_temprano_pct)<=0.5,`Abandono temprano: ${pct(val.abandono_temprano_pct)}`)} ${tag(Number(val.pico_enero_ratio)>=1.4,`Pico de enero: ${Number(val.pico_enero_ratio||0).toFixed(2)}x`)} ${tag(Number(val.correlacion_bajar_peso)<-0.3,`Corr. bajar peso: ${Number(val.correlacion_bajar_peso||0).toFixed(3)}`)} ${tag(Number(val.correlacion_ganar_musculo)>0.3,`Corr. ganar músculo: ${Number(val.correlacion_ganar_musculo||0).toFixed(3)}`)}</p>
+    </div>`;
+}
+
+const V={meas:vMeas,prog:vProg,goals:vGoals,work:vWork,analytics:vAnalytics};
 async function show(v){document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));try{await V[v]()}catch(x){msg(x.message)}}
 async function start(){
   $('#auth').classList.toggle('hide',!!token);$('#app').classList.toggle('hide',!token);$('#out').classList.toggle('hide',!token);

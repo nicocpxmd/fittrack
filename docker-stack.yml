@@ -9,7 +9,7 @@ x-servidor: &servidor
 
 services:
   nginx:
-    image: nicocpxm/fittrack-nginx:v2
+    image: nicocpxm/fittrack-nginx:v3
     deploy:
       replicas: 1
       restart_policy:
@@ -20,7 +20,7 @@ services:
           - node.hostname == clienteUbuntu
 
   haproxy:
-    image: nicocpxm/fittrack-haproxy:v1
+    image: nicocpxm/fittrack-haproxy:v2
     ports:
       - "8080:80"
       - "8404:8404"
@@ -82,6 +82,14 @@ services:
       PROGRESS_SERVICE_URL: http://progress:8005
       WORKOUTS_SERVICE_URL: http://workouts:8003
       MEASUREMENTS_SERVICE_URL: http://measurements:8001
+    deploy: *servidor
+
+  analytics:
+    image: nicocpxm/fittrack-analytics:v1
+    environment:
+      DATA_FILE: /data/analytics.json
+    volumes:
+      - /root/fittrack/analytics/data:/data:ro
     deploy: *servidor
 
   postgres:

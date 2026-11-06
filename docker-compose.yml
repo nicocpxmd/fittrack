@@ -10,7 +10,7 @@ services:
       - "8404:8404"
     volumes:
       - ./haproxy/haproxy.compose.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    depends_on: [nginx, users, measurements, progress, workouts, goals]
+    depends_on: [nginx, users, measurements, progress, workouts, goals, analytics]
     restart: unless-stopped
 
   users:
@@ -77,6 +77,14 @@ services:
         condition: service_started
       mysql:
         condition: service_healthy
+    restart: unless-stopped
+
+  analytics:
+    build: ./analytics
+    environment:
+      DATA_FILE: /data/analytics.json
+    volumes:
+      - ./analytics/data:/data:ro
     restart: unless-stopped
 
   postgres:
