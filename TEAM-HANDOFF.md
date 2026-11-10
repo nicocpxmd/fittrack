@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-11-10
 **Entrega:** viernes 2026-11-20
-**Versión congelada:** tag `v3.1-proyecto-final`
+**Versión congelada:** tag `v3.2-proyecto-final`
 **Rama de trabajo:** `proyecto-final`
 
 Este documento es el punto único de entrada para el equipo. Resume qué está hecho, cómo verlo en
@@ -72,22 +72,22 @@ Ajustar los nombres según el equipo. La idea es que cada persona tenga una tare
 
 ## 5. Reglas de merge
 
-- La entrega vive en `proyecto-final` y en el tag `v3.1-proyecto-final`.
+- La entrega vive en `proyecto-final` y en el tag `v3.2-proyecto-final`.
 - `main` **no** refleja la versión Docker; el merge es el pendiente #18 de `infraeip`.
 - Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
   (`services/goals`, `services/workouts/.env`, `README`, `GUIA PARA FITTRACK.md`), probar el stack
   y revisar con el equipo.
 - Después: tag nuevo `v3.2.0`; **no mover `v3.1`**.
 - Mientras tanto, el link seguro para el Excel es:
-  `https://github.com/nicocpxmd/fittrack/tree/v3.1-proyecto-final`.
+  `https://github.com/nicocpxmd/fittrack/tree/v3.2-proyecto-final`.
 
 ## 6. Enlaces
 
 | Qué | Dónde |
 |---|---|
 | Repo | `https://github.com/nicocpxmd/fittrack` |
-| Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v3.1-proyecto-final` |
-| README | `https://github.com/nicocpxmd/fittrack/blob/v3.1-proyecto-final/README.md` |
+| Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v3.2-proyecto-final` |
+| README | `https://github.com/nicocpxmd/fittrack/blob/v3.2-proyecto-final/README.md` |
 | Informe (LaTeX) | `report/reporte.tex` |
 | Informe (Markdown) | `report/reporte.md` |
 | Diagramas Mermaid | `report/diagramas.md` |
@@ -100,7 +100,7 @@ Ajustar los nombres según el equipo. La idea es que cada persona tenga una tare
 
 > Hola equipo. La parte operativa del proyecto final ya está terminada y desplegada: Swarm con los
 > microservicios, HAProxy balanceando, Spark procesando 8,4 M de filas y la pestaña “Analítica” en el
-> dashboard. Está todo congelado en el tag `v3.1-proyecto-final`.
+> dashboard. Está todo congelado en el tag `v3.2-proyecto-final`.
 >
 > Lo que falta es documentación: el PDF IEEE, las diapositivas y el ensayo. Dejé el contenido del
 > informe y las diapositivas en `report/` y `slides/`, y un documento de handoff con el estado, los
@@ -109,7 +109,7 @@ Ajustar los nombres según el equipo. La idea es que cada persona tenga una tare
 > Por favor revisen el tag y el README, prueben la demo y elijan una tarea de la tabla. No mergeemos a
 > `main` sin revisar: esa rama está atrasada y hay conflictos conocidos.
 >
-> Link de la versión: https://github.com/nicocpxmd/fittrack/tree/v3.1-proyecto-final
+> Link de la versión: https://github.com/nicocpxmd/fittrack/tree/v3.2-proyecto-final
 
 ## 8. Decisiones que hay que poder defender
 
