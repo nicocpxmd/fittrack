@@ -1,32 +1,40 @@
 # Python
-venv/
-.venv/
-__pycache__/ 
-*.pyc estructura.txt 
-*.pyc
+__pycache__/
+*.py[cod]
 *.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
 
 # Variables de entorno
 .env
 **/.env
 
-# Node
-node_modules/
-
-# Archivos generados
-data/measurements.json
-
-# VS Code
+# IDE y sistema
 .vscode/
-
-# Sistema
+.idea/
 .DS_Store
 Thumbs.db
 
-#txt
-estructura.txtservices/workouts/.env
+# Archivos de trabajo locales
+FICHA-TECNICA.md
+estructura.txt
 
-# Proyecto final: artefactos generados
+# Generados
+data/measurements.json
+dataset/data/
 analytics/curated/
 analytics/data/
 tests/load/*.json
+
+# LaTeX
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.synctex.gz

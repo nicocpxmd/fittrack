@@ -1,4 +1,9 @@
-# FitTrack
+# FitTrack — montaje sin Docker (legado)
+
+> **Guía histórica.** Este documento describe el montaje con systemd + nginx, anterior al stack de
+> Docker/Swarm. Para el proyecto final usa el `README.md` de la raíz. Se conserva como referencia:
+> las rutas de los comandos (`services/`, `frontend/`, `deploy/`) son las del repositorio original;
+> la carpeta `deploy/` quedó junto a esta guía en `docs/legacy/bare-metal/deploy/`.
 
 Aplicación web de seguimiento físico basada en microservicios. Cada usuario registra medidas corporales, rutinas y metas, y consulta su progreso. Los datos de cada cuenta están aislados: ningún servicio entrega ni modifica registros de otro usuario.
 

@@ -75,13 +75,15 @@ Ajustar los nombres según el equipo. La idea es que cada persona tenga una tare
 - La entrega vive en `proyecto-final` y en el tag `v3.2-proyecto-final`.
 - `main` **no** refleja la versión Docker; el merge es el pendiente #18 de `infraeip`.
 - Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
-  (`services/goals`, `services/workouts/.env`, `README`, `GUIA PARA FITTRACK.md`), probar el stack
+  (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar el stack
   y revisar con el equipo.
 - Después: tag nuevo `v3.2.0`; **no mover `v3.1`**.
 - Mientras tanto, el link seguro para el Excel es:
   `https://github.com/nicocpxmd/fittrack/tree/v3.2-proyecto-final`.
 
 ## 6. Enlaces
+
+Las rutas de archivo de esta sección son relativas a la raíz del repositorio.
 
 | Qué | Dónde |
 |---|---|
@@ -104,7 +106,7 @@ Ajustar los nombres según el equipo. La idea es que cada persona tenga una tare
 >
 > Lo que falta es documentación: el PDF IEEE, las diapositivas y el ensayo. Dejé el contenido del
 > informe y las diapositivas en `report/` y `slides/`, y un documento de handoff con el estado, los
-> enlaces y las tareas en `TEAM-HANDOFF.md`.
+> enlaces y las tareas en `docs/team-handoff.md`.
 >
 > Por favor revisen el tag y el README, prueben la demo y elijan una tarea de la tabla. No mergeemos a
 > `main` sin revisar: esa rama está atrasada y hay conflictos conocidos.
