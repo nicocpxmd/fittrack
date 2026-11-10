@@ -2,11 +2,11 @@
 
 **Fecha:** 2026-11-10
 **Entrega:** viernes 2026-11-20
-**Versión congelada:** tag `v3.2-proyecto-final`
-**Rama de trabajo:** `proyecto-final`
+**Versión de trabajo:** rama `proyecto-final` (README reproducible)
+**Snapshot de entrega:** tag `v3.2-proyecto-final`
 
-Este documento es el punto único de entrada para el equipo. Resume qué está hecho, cómo verlo en
-10 minutos, qué falta y cómo repartirlo.
+> **Para instalar y ejecutar, sigue el [`README.md`](../README.md).** Este documento es el estado del
+> proyecto y el reparto de tareas del equipo; no repite la instalación.
 
 ## 1. Qué está hecho
 
@@ -18,37 +18,51 @@ Este documento es el punto único de entrada para el equipo. Resume qué está h
 | ETL + KPIs con Spark | ✅ Ejecutado | `analytics/data/analytics.json` |
 | API de analítica | ✅ Funcionando | `/api/analytics/*` |
 | Pestaña “Analítica” | ✅ Funcionando | Captura en `report/figuras/dashboard.jpeg` |
-| README paso a paso | ✅ En el repo | `README.md` |
+| README reproducible | ✅ En el repo | `README.md` |
 | Informe y diapositivas | 🟡 Borradores | `report/` y `slides/` |
-| Tag de entrega | ✅ Publicado | `v3.0` y `v3.1` |
+| Tag de entrega | ✅ Publicado | `v3.2-proyecto-final` |
 
 **Lo que no está hecho:** el PDF IEEE final, las diapositivas en PowerPoint/Google Slides, la prueba
 de failover, el merge a `main` y (opcional) el worker Spark en el cliente.
 
-## 2. Cómo verlo en 10 minutos
+## 2. Cómo verlo en 5 minutos en tu máquina
 
-```powershell
-# 1. Encender las VMs
-cd C:\Users\nicoc\Documents\infraeip
-vagrant up
-vagrant status
+No necesitas las VMs ni la carpeta de otra persona. Solo Docker:
 
-# 2. Abrir el dashboard
-# http://192.168.100.2:8080
-# usuario de prueba: audit20261105@gmail.com / Password123
-
-# 3. Ver la API de analítica
-# http://192.168.100.2:8080/api/analytics/health
-# http://192.168.100.2:8080/api/analytics/kpis
-
-# 4. Stats de HAProxy
-# http://192.168.100.2:8404  (admin / admin)
+```bash
+git clone -b proyecto-final https://github.com/nicocpxmd/fittrack.git
+cd fittrack
+cp .env.example .env
+# editar .env con contraseñas alfanuméricas y una SECRET_KEY
+mkdir -p analytics/data
+cp analytics/sample/analytics.json analytics/data/analytics.json
+docker compose up -d --build
 ```
 
-En el dashboard: iniciar sesión → pestaña **Analítica**. Se ven 5 KPIs, retención, metas, peso,
-estacionalidad, rutinas y la validación contra los patrones sembrados.
+> `main` está atrasada; clona `proyecto-final` hasta que se haga el merge.
 
-## 3. Qué falta y reparto propuesto
+En PowerShell:
+
+```powershell
+git clone -b proyecto-final https://github.com/nicocpxmd/fittrack.git
+cd fittrack
+Copy-Item .env.example .env
+New-Item -ItemType Directory -Force analytics/data
+Copy-Item analytics/sample/analytics.json analytics/data/analytics.json
+docker compose up -d --build
+```
+
+Abrir `http://localhost:8080`, registrarse (cada uno crea su usuario) y entrar a **Analítica**.
+
+Para el pipeline completo con Spark, seguir la sección 5 del `README.md`.
+
+## 3. Demo del laboratorio (opcional)
+
+Si tienes acceso a las VMs del laboratorio, pide la IP del equipo y usa la cuenta que crees tú mismo.
+No se publican credenciales ni rutas personales. El laboratorio ya tiene el stack desplegado; para
+replicarlo desde cero, sigue la sección 6 del `README.md`.
+
+## 4. Qué falta y reparto propuesto
 
 | # | Tarea | Quién | Fecha |
 |---|---|---|---|
@@ -61,57 +75,44 @@ estacionalidad, rutinas y la validación contra los patrones sembrados.
 
 Ajustar los nombres según el equipo. La idea es que cada persona tenga una tarea concreta y una fecha.
 
-## 4. Qué necesito de cada uno
+## 5. Qué necesito de cada uno
 
-1. **Revisar el tag `v3.1`** y el `README.md`; no hace falta leer los 54 archivos del diff.
-2. **Probar la demo** con la cuenta de prueba y confirmar que el dashboard abre.
+1. **Probar el quick start del `README.md`** en su propia máquina; si algo falla, reportarlo.
+2. **Revisar la rama `proyecto-final`** y el `README.md`; no hace falta leer los 54 archivos del diff.
 3. **Elegir una tarea** de la tabla y ponerle fecha.
 4. **No mergear a `main` sin revisión**: la rama `main` está atrasada y el merge tiene conflictos
-   conocidos (goals, `.env` de workouts, README, guía).
+   conocidos (goals, `.env` de workouts, README, guía legacy).
 5. **No tocar** `dataset/data` ni los volúmenes de las bases sin avisar.
+6. **No publicar credenciales** en el repo ni en el chat del grupo.
 
-## 5. Reglas de merge
+## 6. Reglas de merge
 
 - La entrega vive en `proyecto-final` y en el tag `v3.2-proyecto-final`.
-- `main` **no** refleja la versión Docker; el merge es el pendiente #18 de `infraeip`.
+- `main` no refleja la versión Docker; el merge es el pendiente #18 de `infraeip`.
 - Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
-  (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar el stack
-  y revisar con el equipo.
-- Después: tag nuevo `v3.2.0`; **no mover `v3.1`**.
+  (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar
+  el stack y revisar con el equipo.
+- Después: tag nuevo `v3.3` si se decide; **no mover `v3.2`**.
 - Mientras tanto, el link seguro para el Excel es:
   `https://github.com/nicocpxmd/fittrack/tree/v3.2-proyecto-final`.
 
-## 6. Enlaces
-
-Las rutas de archivo de esta sección son relativas a la raíz del repositorio.
+## 7. Enlaces
 
 | Qué | Dónde |
 |---|---|
 | Repo | `https://github.com/nicocpxmd/fittrack` |
 | Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v3.2-proyecto-final` |
-| README | `https://github.com/nicocpxmd/fittrack/blob/v3.2-proyecto-final/README.md` |
+| README (instalación) | `https://github.com/nicocpxmd/fittrack/blob/proyecto-final/README.md` |
+| Informe (PDF) | `report/reporte.pdf` |
 | Informe (LaTeX) | `report/reporte.tex` |
 | Informe (Markdown) | `report/reporte.md` |
 | Diagramas Mermaid | `report/diagramas.md` |
 | Diapositivas | `slides/slides.md` |
 | Consistencia dataset–app | `dataset/CONSISTENCIA.md` |
 | Captura del dashboard | `report/figuras/dashboard.jpeg` |
-| Ficha en infraeip | `docs/practicas/proyecto-final.md` |
+| Guía sin Docker (legado) | `docs/legacy/bare-metal/README.md` |
 
-## 7. Mensaje para el grupo
-
-> Hola equipo. La parte operativa del proyecto final ya está terminada y desplegada: Swarm con los
-> microservicios, HAProxy balanceando, Spark procesando 8,4 M de filas y la pestaña “Analítica” en el
-> dashboard. Está todo congelado en el tag `v3.2-proyecto-final`.
->
-> Lo que falta es documentación: el PDF IEEE, las diapositivas y el ensayo. Dejé el contenido del
-> informe y las diapositivas en `report/` y `slides/`, y un documento de handoff con el estado, los
-> enlaces y las tareas en `docs/team-handoff.md`.
->
-> Por favor revisen el tag y el README, prueben la demo y elijan una tarea de la tabla. No mergeemos a
-> `main` sin revisar: esa rama está atrasada y hay conflictos conocidos.
->
-> Link de la versión: https://github.com/nicocpxmd/fittrack/tree/v3.2-proyecto-final
+Las rutas de archivo son relativas a la raíz del repositorio.
 
 ## 8. Decisiones que hay que poder defender
 
@@ -124,6 +125,8 @@ Las rutas de archivo de esta sección son relativas a la raíz del repositorio.
   `dataset/CONSISTENCIA.md`).
 - **Las réplicas quedaron en un nodo**: el escalado es dentro del servidor; distribuir entre nodos
   es trabajo futuro.
+- **Compose es la ruta de reproducción local; Swarm es el clúster evaluado**. El enunciado no
+  impone una herramienta, pero sí exige un clúster.
 
 ## 9. Calendario 10–20 de noviembre
 
@@ -139,3 +142,15 @@ Las rutas de archivo de esta sección son relativas a la raíz del repositorio.
 | Mié 18 | Congelar y subir a UAO virtual |
 | Jue 19 | Buffer y ensayo final |
 | Vie 20 | Entrega |
+
+## 10. Mensaje para el grupo
+
+> Hola equipo. La parte operativa del proyecto está terminada en la rama `proyecto-final`; el
+> snapshot de entrega es el tag `v3.2-proyecto-final`. Para verla en su máquina no necesitan mis
+> rutas ni mis VMs: clonan con `-b proyecto-final`, siguen el `README.md` y ejecutan
+> `docker compose up -d --build`. Cada uno crea su propio usuario; no hay credenciales compartidas.
+>
+> Lo que falta es documentación: el PDF IEEE, las diapositivas y el ensayo. Revisen la rama, prueben
+> el quick start y elijan una tarea de `docs/team-handoff.md`. No mergeemos a `main` sin revisar.
+>
+> Link de la versión de trabajo: https://github.com/nicocpxmd/fittrack/tree/proyecto-final

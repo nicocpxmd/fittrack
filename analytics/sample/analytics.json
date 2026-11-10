@@ -1,0 +1,547 @@
+{
+  "generated_at": "2026-11-06T02:56:24.412821Z",
+  "dataset": {
+    "usuarios": 100000,
+    "medidas": 2881725,
+    "rutinas": 5321322,
+    "metas": 115128,
+    "filas_total": 8418175,
+    "desde": "2025-01-06",
+    "hasta": "2026-06-07"
+  },
+  "limpieza": {
+    "fuente": "./dataset/data",
+    "curado": "./analytics/curated",
+    "usuarios": 100000,
+    "usuarios_lb": 14659,
+    "medidas": {
+      "filas_originales": 2898854,
+      "duplicados_eliminados": 14204,
+      "invalidos_eliminados": 2925,
+      "filas_curadas": 2881725,
+      "fechas_otro_formato": 8703,
+      "nulos": {
+        "cintura": 86335,
+        "brazo": 86424,
+        "pecho": 86962
+      }
+    },
+    "rutinas": {
+      "filas_originales": 5348098,
+      "duplicados_eliminados": 26776,
+      "filas_curadas": 5321322,
+      "fechas_otro_formato": 16025
+    },
+    "metas": {
+      "filas_curadas": 115128
+    }
+  },
+  "kpis": {
+    "usuarios": 100000,
+    "usuarios_activos_12s": 54758,
+    "promedio_sesiones_semana": 2.68,
+    "tasa_cumplimiento_metas": 0.1696,
+    "cambio_promedio_peso_kg": -0.71
+  },
+  "retencion": {
+    "despues_4_semanas": 0.8637,
+    "despues_12_semanas": 0.5163,
+    "despues_26_semanas": 0.333,
+    "por_cohorte": [
+      {
+        "cohorte": "2025-01",
+        "usuarios": 9944,
+        "activos_12s": 5614,
+        "retencion_12s": 0.5646
+      },
+      {
+        "cohorte": "2025-02",
+        "usuarios": 5152,
+        "activos_12s": 2970,
+        "retencion_12s": 0.5765
+      },
+      {
+        "cohorte": "2025-03",
+        "usuarios": 5355,
+        "activos_12s": 2969,
+        "retencion_12s": 0.5544
+      },
+      {
+        "cohorte": "2025-04",
+        "usuarios": 5243,
+        "activos_12s": 2978,
+        "retencion_12s": 0.568
+      },
+      {
+        "cohorte": "2025-05",
+        "usuarios": 5387,
+        "activos_12s": 3071,
+        "retencion_12s": 0.5701
+      },
+      {
+        "cohorte": "2025-06",
+        "usuarios": 5206,
+        "activos_12s": 2967,
+        "retencion_12s": 0.5699
+      },
+      {
+        "cohorte": "2025-07",
+        "usuarios": 5459,
+        "activos_12s": 3112,
+        "retencion_12s": 0.5701
+      },
+      {
+        "cohorte": "2025-08",
+        "usuarios": 5452,
+        "activos_12s": 3142,
+        "retencion_12s": 0.5763
+      },
+      {
+        "cohorte": "2025-09",
+        "usuarios": 5222,
+        "activos_12s": 3058,
+        "retencion_12s": 0.5856
+      },
+      {
+        "cohorte": "2025-10",
+        "usuarios": 5287,
+        "activos_12s": 3038,
+        "retencion_12s": 0.5746
+      },
+      {
+        "cohorte": "2025-11",
+        "usuarios": 5143,
+        "activos_12s": 2979,
+        "retencion_12s": 0.5792
+      },
+      {
+        "cohorte": "2025-12",
+        "usuarios": 4366,
+        "activos_12s": 2465,
+        "retencion_12s": 0.5646
+      },
+      {
+        "cohorte": "2026-01",
+        "usuarios": 10784,
+        "activos_12s": 6259,
+        "retencion_12s": 0.5804
+      },
+      {
+        "cohorte": "2026-02",
+        "usuarios": 5082,
+        "activos_12s": 2981,
+        "retencion_12s": 0.5866
+      },
+      {
+        "cohorte": "2026-03",
+        "usuarios": 5423,
+        "activos_12s": 3114,
+        "retencion_12s": 0.5742
+      },
+      {
+        "cohorte": "2026-04",
+        "usuarios": 5005,
+        "activos_12s": 914,
+        "retencion_12s": 0.1826
+      },
+      {
+        "cohorte": "2026-05",
+        "usuarios": 5267,
+        "activos_12s": 0,
+        "retencion_12s": 0.0
+      },
+      {
+        "cohorte": "2026-06",
+        "usuarios": 1223,
+        "activos_12s": 0,
+        "retencion_12s": 0.0
+      }
+    ]
+  },
+  "adherencia": [
+    {
+      "bucket": "0",
+      "count": 458
+    },
+    {
+      "bucket": "1",
+      "count": 14980
+    },
+    {
+      "bucket": "2-3",
+      "count": 50522
+    },
+    {
+      "bucket": "4-5",
+      "count": 29216
+    },
+    {
+      "bucket": "6+",
+      "count": 4824
+    }
+  ],
+  "metas": {
+    "por_objetivo": [
+      {
+        "objetivo_fitness": "bajar_peso",
+        "metas": 51531,
+        "cumplidas": 9012,
+        "tasa_cumplimiento": 0.1749
+      },
+      {
+        "objetivo_fitness": "ganar_musculo",
+        "metas": 28630,
+        "cumplidas": 4026,
+        "tasa_cumplimiento": 0.1406
+      },
+      {
+        "objetivo_fitness": "mantener",
+        "metas": 18184,
+        "cumplidas": 5806,
+        "tasa_cumplimiento": 0.3193
+      },
+      {
+        "objetivo_fitness": "resistencia",
+        "metas": 16783,
+        "cumplidas": 685,
+        "tasa_cumplimiento": 0.0408
+      }
+    ],
+    "por_ambicion": [
+      {
+        "tercil": 1,
+        "metas": 38376,
+        "cumplidas": 11362,
+        "tasa_cumplimiento": 0.2961
+      },
+      {
+        "tercil": 2,
+        "metas": 38376,
+        "cumplidas": 5330,
+        "tasa_cumplimiento": 0.1389
+      },
+      {
+        "tercil": 3,
+        "metas": 38376,
+        "cumplidas": 2837,
+        "tasa_cumplimiento": 0.0739
+      }
+    ],
+    "por_estado": [
+      {
+        "estado": "abandonada",
+        "count": 42673
+      },
+      {
+        "estado": "vencida",
+        "count": 33342
+      },
+      {
+        "estado": "activa",
+        "count": 19584
+      },
+      {
+        "estado": "cumplida",
+        "count": 19529
+      }
+    ]
+  },
+  "peso": {
+    "por_objetivo": [
+      {
+        "objetivo_fitness": "bajar_peso",
+        "usuarios": 28346,
+        "cambio_promedio_kg": -2.87,
+        "correlacion_sesiones": -0.595
+      },
+      {
+        "objetivo_fitness": "ganar_musculo",
+        "usuarios": 15767,
+        "cambio_promedio_kg": 2.84,
+        "correlacion_sesiones": 0.597
+      },
+      {
+        "objetivo_fitness": "mantener",
+        "usuarios": 9734,
+        "cambio_promedio_kg": -0.01,
+        "correlacion_sesiones": 0.009
+      },
+      {
+        "objetivo_fitness": "resistencia",
+        "usuarios": 9519,
+        "cambio_promedio_kg": -0.87,
+        "correlacion_sesiones": -0.435
+      }
+    ],
+    "usuarios_con_delta": 63366
+  },
+  "estacionalidad": {
+    "registros_por_mes": [
+      {
+        "mes": "2025-01",
+        "count": 9944
+      },
+      {
+        "mes": "2025-02",
+        "count": 5152
+      },
+      {
+        "mes": "2025-03",
+        "count": 5355
+      },
+      {
+        "mes": "2025-04",
+        "count": 5243
+      },
+      {
+        "mes": "2025-05",
+        "count": 5387
+      },
+      {
+        "mes": "2025-06",
+        "count": 5206
+      },
+      {
+        "mes": "2025-07",
+        "count": 5459
+      },
+      {
+        "mes": "2025-08",
+        "count": 5452
+      },
+      {
+        "mes": "2025-09",
+        "count": 5222
+      },
+      {
+        "mes": "2025-10",
+        "count": 5287
+      },
+      {
+        "mes": "2025-11",
+        "count": 5143
+      },
+      {
+        "mes": "2025-12",
+        "count": 4366
+      },
+      {
+        "mes": "2026-01",
+        "count": 10784
+      },
+      {
+        "mes": "2026-02",
+        "count": 5082
+      },
+      {
+        "mes": "2026-03",
+        "count": 5423
+      },
+      {
+        "mes": "2026-04",
+        "count": 5005
+      },
+      {
+        "mes": "2026-05",
+        "count": 5267
+      },
+      {
+        "mes": "2026-06",
+        "count": 1223
+      }
+    ],
+    "sesiones_por_mes": [
+      {
+        "mes": "2025-01",
+        "count": 86667
+      },
+      {
+        "mes": "2025-02",
+        "count": 148220
+      },
+      {
+        "mes": "2025-03",
+        "count": 168978
+      },
+      {
+        "mes": "2025-04",
+        "count": 189899
+      },
+      {
+        "mes": "2025-05",
+        "count": 219733
+      },
+      {
+        "mes": "2025-06",
+        "count": 221463
+      },
+      {
+        "mes": "2025-07",
+        "count": 256061
+      },
+      {
+        "mes": "2025-08",
+        "count": 267628
+      },
+      {
+        "mes": "2025-09",
+        "count": 296292
+      },
+      {
+        "mes": "2025-10",
+        "count": 321916
+      },
+      {
+        "mes": "2025-11",
+        "count": 285160
+      },
+      {
+        "mes": "2025-12",
+        "count": 275286
+      },
+      {
+        "mes": "2026-01",
+        "count": 487721
+      },
+      {
+        "mes": "2026-02",
+        "count": 435104
+      },
+      {
+        "mes": "2026-03",
+        "count": 416552
+      },
+      {
+        "mes": "2026-04",
+        "count": 407243
+      },
+      {
+        "mes": "2026-05",
+        "count": 412518
+      },
+      {
+        "mes": "2026-06",
+        "count": 370997
+      },
+      {
+        "mes": "2026-07",
+        "count": 53884
+      }
+    ],
+    "pico_enero_ratio": 1.88
+  },
+  "rutinas": {
+    "por_tipo": [
+      {
+        "tipo_enfoque": "fuerza",
+        "sesiones": 1621255,
+        "duracion_promedio_min": 52.0,
+        "intensidad_promedio": 6.1
+      },
+      {
+        "tipo_enfoque": "cardio",
+        "sesiones": 1502608,
+        "duracion_promedio_min": 40.1,
+        "intensidad_promedio": 6.11
+      },
+      {
+        "tipo_enfoque": "hiit",
+        "sesiones": 970496,
+        "duracion_promedio_min": 35.2,
+        "intensidad_promedio": 7.09
+      },
+      {
+        "tipo_enfoque": "mixto",
+        "sesiones": 919970,
+        "duracion_promedio_min": 50.0,
+        "intensidad_promedio": 6.11
+      },
+      {
+        "tipo_enfoque": "movilidad",
+        "sesiones": 306993,
+        "duracion_promedio_min": 30.6,
+        "intensidad_promedio": 6.1
+      }
+    ],
+    "por_grupo_muscular": [
+      {
+        "grupo_muscular": "cuerpo_completo",
+        "sesiones": 2477334
+      },
+      {
+        "grupo_muscular": "piernas",
+        "sesiones": 1208843
+      },
+      {
+        "grupo_muscular": "core",
+        "sesiones": 454581
+      },
+      {
+        "grupo_muscular": "espalda",
+        "sesiones": 316856
+      },
+      {
+        "grupo_muscular": "pecho",
+        "sesiones": 316695
+      },
+      {
+        "grupo_muscular": "hombros",
+        "sesiones": 280275
+      },
+      {
+        "grupo_muscular": "brazos",
+        "sesiones": 266738
+      }
+    ],
+    "duracion_promedio_min": 44.0,
+    "intensidad_promedio": 6.29
+  },
+  "ciudades": [
+    {
+      "ciudad": "Bogotá",
+      "count": 27869
+    },
+    {
+      "ciudad": "Medellín",
+      "count": 17131
+    },
+    {
+      "ciudad": "Cali",
+      "count": 13987
+    },
+    {
+      "ciudad": "Barranquilla",
+      "count": 9116
+    },
+    {
+      "ciudad": "Cúcuta",
+      "count": 6087
+    },
+    {
+      "ciudad": "Bucaramanga",
+      "count": 6043
+    },
+    {
+      "ciudad": "Cartagena",
+      "count": 5792
+    },
+    {
+      "ciudad": "Pereira",
+      "count": 4995
+    },
+    {
+      "ciudad": "Santa Marta",
+      "count": 4963
+    },
+    {
+      "ciudad": "Manizales",
+      "count": 4017
+    }
+  ],
+  "validacion": {
+    "abandono_temprano_pct": 0.3953,
+    "pico_enero_ratio": 1.88,
+    "correlacion_bajar_peso": -0.595,
+    "correlacion_ganar_musculo": 0.597
+  }
+}

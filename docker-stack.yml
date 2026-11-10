@@ -1,3 +1,7 @@
+# Requiere nodos etiquetados:
+#   docker node update --label-add role=server <hostname-del-manager>
+#   docker node update --label-add role=worker <hostname-del-worker>
+# FITTRACK_DIR es la ruta del repo en el nodo servidor; por defecto /root/fittrack.
 x-servidor: &servidor
   replicas: 1
   restart_policy:
@@ -5,7 +9,7 @@ x-servidor: &servidor
     delay: 5s
   placement:
     constraints:
-      - node.hostname == servidorUbuntu
+      - node.labels.role == server
 
 services:
   nginx:
@@ -17,7 +21,7 @@ services:
         delay: 5s
       placement:
         constraints:
-          - node.hostname == clienteUbuntu
+          - node.labels.role == worker
 
   haproxy:
     image: nicocpxm/fittrack-haproxy:v2
@@ -31,7 +35,7 @@ services:
         delay: 5s
       placement:
         constraints:
-          - node.hostname == clienteUbuntu
+          - node.labels.role == worker
 
   users:
     image: nicocpxm/fittrack-users:v2
@@ -89,7 +93,7 @@ services:
     environment:
       DATA_FILE: /data/analytics.json
     volumes:
-      - /root/fittrack/analytics/data:/data:ro
+      - ${FITTRACK_DIR:-/root/fittrack}/analytics/data:/data:ro
     deploy: *servidor
 
   postgres:
@@ -114,9 +118,9 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysqldata:/var/lib/mysql
-      - /root/fittrack/docker/mysql-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
-      - /root/fittrack/services/goals/schema.sql:/schemas/goals.sql:ro
-      - /root/fittrack/services/workouts/schema.sql:/schemas/workouts.sql:ro
+      - ${FITTRACK_DIR:-/root/fittrack}/docker/mysql-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+      - ${FITTRACK_DIR:-/root/fittrack}/services/goals/schema.sql:/schemas/goals.sql:ro
+      - ${FITTRACK_DIR:-/root/fittrack}/services/workouts/schema.sql:/schemas/workouts.sql:ro
     deploy: *servidor
 
 volumes:

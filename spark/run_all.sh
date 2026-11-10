@@ -2,6 +2,7 @@
 # ETL + KPIs en secuencia.
 set -euo pipefail
 
-ROOT="${ROOT:-/root/fittrack}"
-"$ROOT/spark/run_etl.sh"
-"$ROOT/spark/run_analytics.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+bash "$SCRIPT_DIR/run_etl.sh"
+bash "$SCRIPT_DIR/run_analytics.sh"

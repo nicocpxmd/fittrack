@@ -87,6 +87,14 @@ services:
       - ./analytics/data:/data:ro
     restart: unless-stopped
 
+  # Perfil opcional para generar/validar el dataset sin depender del shell:
+  #   docker compose --profile tools run --rm dataset python generar_dataset.py --salida /data --usuarios 2000
+  dataset:
+    build: ./dataset
+    profiles: ["tools"]
+    volumes:
+      - ./dataset/data:/data
+
   postgres:
     image: postgres:16
     environment:

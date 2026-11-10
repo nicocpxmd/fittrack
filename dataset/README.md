@@ -27,6 +27,24 @@ Los parámetros del modelo (distribuciones de peso, altura, duración de rutinas
 - **Sin Docker:** Python 3.12 y `pip install -r requirements.txt`.
 - Espacio en disco y memoria según el tamaño (ver la tabla de más abajo).
 
+## 0. Con Docker Compose (recomendado)
+
+El repo trae un servicio `dataset` bajo el perfil `tools`. Desde la raíz:
+
+```bash
+docker compose --profile tools run --rm dataset generar_dataset.py --salida /data --usuarios 2000 --semilla 42
+docker compose --profile tools run --rm dataset validar_dataset.py --dir /data
+```
+
+Para la corrida completa cambia `--usuarios 2000` por `--usuarios 100000`. El servicio monta
+`dataset/data` en `/data`; no hace falta construir la imagen a mano ni escribir rutas absolutas.
+
+En Linux, los archivos generados quedan como `root`; si necesitas editarlos:
+
+```bash
+sudo chown -R "$USER":"$USER" dataset/data
+```
+
 ## 1. Generar el dataset (con Docker)
 
 Desde esta carpeta (`dataset/`):
