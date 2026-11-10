@@ -2,10 +2,24 @@
 
 Archivos:
 
-- `reporte.md`: contenido completo del informe (resumen, análisis, diseño, implementación, pruebas,
-  conclusiones y referencias).
+- `reporte.tex`: informe en LaTeX con plantilla IEEE (`IEEEtran`). Es la versión para compilar.
+- `reporte.pdf`: PDF compilado con Tectonic (4 páginas).
+- `reporte.md`: borrador en Markdown con el mismo contenido.
 - `diagramas.md`: diagramas Mermaid de componentes, despliegue y pipeline.
-- `figuras/dashboard.jpeg`: captura de la pestaña Analítica.
+- `figuras/`: `arquitectura.png`, `despliegue.png`, `pipeline.png`, `dashboard.jpeg` y
+  `dashboard-crop.jpeg`.
+
+## Compilación
+
+La vía recomendada es **Overleaf**:
+
+1. Crear un proyecto con la plantilla IEEE Conference.
+2. Subir `reporte.tex` y la carpeta `figuras/`.
+3. Compilar con pdfLaTeX.
+4. Revisar que el PDF final no pase de 10 páginas.
+
+`reporte.pdf` se generó localmente con Tectonic (XeLaTeX). Si Overleaf/pdfLaTeX produce diferencias
+de tipografía o de saltos de página, recompilar allí; el contenido es el mismo.
 
 ## Pasos para producir el PDF
 
