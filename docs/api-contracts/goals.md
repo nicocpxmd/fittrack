@@ -94,14 +94,6 @@ La respuesta agrega:
 
 Si el `user_id` no coincide con el propietario de la meta, responde `403`.
 
-### Listar todas las metas (administracion)
-
-```http
-GET http://localhost:8004/goals/admin/all
-```
-
-Esta ruta no filtra por usuario.
-
 ### Actualizar una meta
 
 ```http

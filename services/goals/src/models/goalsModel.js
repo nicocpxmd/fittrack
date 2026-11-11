@@ -10,11 +10,6 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-async function obtenerTodos() {
-    const [rows] = await pool.query('SELECT * FROM goals ORDER BY created_at DESC');
-    return rows;
-}
-
 async function obtenerPorId(id) {
     const [rows] = await pool.query('SELECT * FROM goals WHERE id = ?', [id]);
     return rows[0] || null;
@@ -58,7 +53,6 @@ async function eliminar(id) {
 }
 
 module.exports = {
-    obtenerTodos,
     obtenerPorId,
     obtenerPorUsuario,
     crear,

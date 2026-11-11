@@ -62,16 +62,6 @@
         }
       }
     },
-    "/goals/admin/all": {
-      "get": {
-        "summary": "Listar todas las metas de todos los usuarios (requiere estar autenticado; sin control de rol admin todavía)",
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": { "description": "OK" },
-          "401": { "description": "Token faltante, inválido o expirado" }
-        }
-      }
-    },
     "/goals/{id}": {
       "get": {
         "summary": "Consultar una meta (recalcula y persiste el progreso contra progress)",

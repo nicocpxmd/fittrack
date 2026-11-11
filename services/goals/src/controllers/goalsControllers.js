@@ -75,17 +75,6 @@ router.get('/goals', async (req, res) => {
     }
 });
 
-// GET /goals/admin/all — ver nota abajo, queda pendiente de tu decisión
-router.get('/goals/admin/all', async (req, res) => {
-    try {
-        const todasLasMetas = await goalsModel.obtenerTodos();
-        res.status(200).json(todasLasMetas);
-    } catch (error) {
-        console.error("Error al obtener todas las metas:", error);
-        res.status(500).json({ error: "Error al obtener todas las metas." });
-    }
-});
-
 // READ ONE — recalcula y persiste el progreso
 router.get('/goals/:id', async (req, res) => {
     try {
