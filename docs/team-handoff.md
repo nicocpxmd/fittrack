@@ -3,7 +3,7 @@
 **Fecha:** 2026-11-11
 **Entrega:** viernes 2026-11-20
 **Versión de trabajo:** rama `proyecto-final` (README reproducible)
-**Snapshot de entrega:** tag `v3.6-proyecto-final`
+**Snapshot de entrega:** tag `v3.7-proyecto-final`
 
 > **Para instalar y ejecutar, sigue el [`README.md`](../README.md).** Este documento describe el
 > estado del proyecto; no repite la instalación.
@@ -23,14 +23,14 @@
 | Prueba de clon limpio | ✅ Superada | Clon del tag + Compose: 11 contenedores, 3 bases y dashboard |
 | Informe IEEE | ✅ Compilado | `report/reporte.pdf`, 5 páginas |
 | Diapositivas | 🟡 Borrador | `slides/slides.md` |
-| Tag de entrega | ✅ Publicado | `v3.6-proyecto-final` |
+| Tag de entrega | ✅ Publicado | `v3.7-proyecto-final` |
 
 ## 2. Cómo verlo en 5 minutos en tu máquina
 
 No necesitas las VMs ni la carpeta de otra persona. Solo Docker:
 
 ```bash
-git clone -b v3.6-proyecto-final https://github.com/nicocpxmd/fittrack.git
+git clone -b v3.7-proyecto-final https://github.com/nicocpxmd/fittrack.git
 cd fittrack
 cp .env.example .env
 # editar .env con contraseñas alfanuméricas y una SECRET_KEY
@@ -39,14 +39,14 @@ cp analytics/sample/analytics.json analytics/data/analytics.json
 docker compose up -d --build
 ```
 
-> `v3.6-proyecto-final` es el snapshot congelado de la entrega. Para trabajar sobre el proyecto usa
+> `v3.7-proyecto-final` es el snapshot congelado de la entrega. Para trabajar sobre el proyecto usa
 > la rama `proyecto-final` (va un commit adelante, solo en documentación). `main` está atrasada hasta
 > que se haga el merge.
 
 En PowerShell:
 
 ```powershell
-git clone -b v3.6-proyecto-final https://github.com/nicocpxmd/fittrack.git
+git clone -b v3.7-proyecto-final https://github.com/nicocpxmd/fittrack.git
 cd fittrack
 Copy-Item .env.example .env
 New-Item -ItemType Directory -Force analytics/data
@@ -71,22 +71,22 @@ Para el pipeline completo con Spark, seguir la sección 5 del `README.md`.
 
 ## 4. Reglas de merge
 
-- La entrega vive en `proyecto-final` y en el tag `v3.6-proyecto-final`.
+- La entrega vive en `proyecto-final` y en el tag `v3.7-proyecto-final`.
 - `main` no refleja la versión Docker; el merge es el pendiente #18 de `infraeip`.
 - Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
   (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar
   el stack y revisar con el equipo.
-- Los tags `v3.3`, `v3.4` y `v3.5` se conservan por si hay enlaces externos; **no se mueven**. `v3.2`
-  se eliminó el 2026-11-11 y sus commits siguen en la rama.
+- Los tags `v3.3`, `v3.4` y `v3.5` se conservan por si hay enlaces externos; **no se mueven**. `v3.2` y
+  `v3.6` se eliminaron el 2026-11-11 y sus commits siguen en la rama.
 - Mientras tanto, el link seguro para el Excel es:
-  `https://github.com/nicocpxmd/fittrack/tree/v3.6-proyecto-final`.
+  `https://github.com/nicocpxmd/fittrack/tree/v3.7-proyecto-final`.
 
 ## 5. Enlaces
 
 | Qué | Dónde |
 |---|---|
 | Repo | `https://github.com/nicocpxmd/fittrack` |
-| Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v3.6-proyecto-final` |
+| Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v3.7-proyecto-final` |
 | README (instalación) | `https://github.com/nicocpxmd/fittrack/blob/proyecto-final/README.md` |
 | Informe (PDF) | `report/reporte.pdf` |
 | Informe (LaTeX) | `report/reporte.tex` |
