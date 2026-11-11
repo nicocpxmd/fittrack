@@ -22,7 +22,8 @@
 \title{FitTrack: microservicios en Docker Swarm y análisis distribuido con Apache Spark}
 
 \author{
-\IEEEauthorblockN{Integrante 1, Integrante 2, Integrante 3, Integrante 4, Integrante 5}
+\IEEEauthorblockN{Juan Camilo Serrano, Lucio Matías Melendez Rojas, Juan David Ocampo Gutierrez,\\
+Nicolás Castro Pacheco, Diego Fernando Asprilla Palacios}
 \IEEEauthorblockA{Curso de Redes e Infraestructura\\
 Universidad Autónoma de Occidente\\
 Cali, Colombia\\
@@ -60,18 +61,20 @@ de usuarios, medidas, progreso, rutinas y metas.
 El objetivo general es desplegar la aplicación en un clúster de contenedores con escalabilidad y
 balanceo, y construir un pipeline de análisis distribuido que genere reportes consumidos por el
 dashboard. Los objetivos específicos son: (1) empaquetar los microservicios y sus bases de datos en
-imágenes reproducibles; (2) desplegar el stack en Docker Swarm con HAProxy; (3) diseñar y ejecutar un
-ETL con Spark sobre un dataset de gran escala; (4) calcular KPIs de interés y validarlos contra
-patrones conocidos; (5) publicar los resultados por una API y mostrarlos en el dashboard; y
-(6) medir funcionamiento, escalabilidad y desempeño, documentando la reproducción.
+imágenes reproducibles; (2) desplegar el stack en Docker Swarm \cite{docker} con HAProxy; (3)
+diseñar y ejecutar un ETL con Spark \cite{spark} sobre un dataset de gran escala; (4) calcular KPIs de
+interés y validarlos contra patrones conocidos; (5) publicar los resultados por una API y mostrarlos
+en el dashboard; y (6) medir funcionamiento, escalabilidad y desempeño, documentando la reproducción.
 
 La contribución principal es una solución completa y reproducible que separa la aplicación
 transaccional (microservicios y bases de datos) del procesamiento analítico (Spark y archivos
-Parquet/JSON), con evidencia de funcionamiento y de escalado.
+Parquet/JSON), con evidencia de funcionamiento y de escalado. El documento sigue el formato IEEE de
+dos columnas \cite{ieee}.
 
 \section{Análisis}
 \subsection{Dataset}
-Se usó \textbf{FitTrack-Synth}, un dataset sintético y reproducible generado por el propio equipo.
+Se usó \textbf{FitTrack-Synth} \cite{dataset}, un dataset sintético y reproducible generado por el
+propio equipo.
 El profesor autorizó explícitamente su uso. La decisión se justifica por privacidad (no contiene
 datos de personas reales), reproducibilidad (con la semilla 42 se obtiene el mismo dataset) y
 validación (el generador siembra patrones conocidos y publica una carpeta \texttt{clave\_respuestas}
@@ -86,6 +89,11 @@ La limitación principal es que los datos son sintéticos: los resultados no des
 real, pero sí permiten evaluar el pipeline, la limpieza y la capacidad de recuperar patrones.
 
 \subsection{Alternativas evaluadas}
+Se compararon las opciones disponibles para cada dimensión del despliegue; el
+Cuadro~\ref{tab:alternativas} resume la decisión y el motivo. El criterio fue doble: usar lo que ya
+estaba disponible en el laboratorio y caber en 3,8 GiB de RAM por nodo, porque el objetivo del curso
+es demostrar el funcionamiento, no maximizar la sofisticación de las herramientas.
+
 \begin{table}[t]
 \centering
 \caption{Alternativas evaluadas y decisión.}
@@ -124,12 +132,14 @@ requisitos no funcionales: reproducibilidad (scripts y README) y operación con 
 \label{fig:arquitectura}
 \end{figure}
 
-La aplicación se compone de: \textbf{frontend nginx}, que sirve el HTML/JS del dashboard y no proxea
-APIs; \textbf{HAProxy}, único entrypoint que enruta \texttt{/api/<servicio>/} y balancea entre
-réplicas; \textbf{users} (registro, login JWT y perfil; Postgres); \textbf{measurements} (medidas
-corporales; Mongo); \textbf{progress} (cálculo de progreso; Mongo); \textbf{workouts} (rutinas;
-MySQL); \textbf{goals} (metas; MySQL); \textbf{analytics} (API de solo lectura de los KPIs); y las
-bases \textbf{postgres}, \textbf{mongo} y \textbf{mysql}, con volúmenes \texttt{fittrack\_*}.
+La Figura~\ref{fig:arquitectura} muestra los componentes y el recorrido de una petición. La
+aplicación se compone de: \textbf{frontend nginx}, que sirve el HTML/JS del dashboard y no proxea
+APIs; \textbf{HAProxy} \cite{haproxy}, único entrypoint que enruta \texttt{/api/<servicio>/} y
+balancea entre réplicas; \textbf{users} (registro, login JWT y perfil; Postgres);
+\textbf{measurements} (medidas corporales; Mongo); \textbf{progress} (cálculo de progreso; Mongo);
+\textbf{workouts} (rutinas; MySQL); \textbf{goals} (metas; MySQL); \textbf{analytics} (API de solo
+lectura de los KPIs, en FastAPI \cite{fastapi}); y las bases \textbf{postgres}, \textbf{mongo} y
+\textbf{mysql}, con volúmenes \texttt{fittrack\_*}.
 
 El navegador llama a \url{http://192.168.100.2:8080/api/...}; HAProxy reescribe el prefijo y envía
 la petición al servicio correspondiente. Los servicios validan el JWT contra \texttt{users} y filtran
@@ -159,9 +169,9 @@ Nodo & IP & Rol \\
 \end{tabularx}
 \end{table}
 
-HAProxy y nginx se fijan al cliente; los servicios con estado y las bases de datos se fijan al
-servidor para que los volúmenes y bind mounts estén disponibles. La red overlay de Swarm conecta los
-dos nodos.
+La Figura~\ref{fig:despliegue} y el Cuadro~\ref{tab:nodos} resumen el despliegue. HAProxy y nginx se
+fijan al cliente; los servicios con estado y las bases de datos se fijan al servidor para que los
+volúmenes y bind mounts estén disponibles. La red overlay de Swarm conecta los dos nodos.
 
 \subsection{Pipeline de datos}
 \begin{figure}[t]
@@ -171,12 +181,19 @@ dos nodos.
 \label{fig:pipeline}
 \end{figure}
 
-El flujo es: (1) landing zone con los CSV crudos en \texttt{/root/fittrack/dataset/data};
-(2) ETL con esquema explícito, limpieza y escritura de Parquet en \texttt{analytics/curated};
-(3) KPIs con Spark SQL/DataFrame y escritura de \texttt{analytics.json}; (4) publicación por el
-servicio \texttt{analytics}; y (5) consumo por la pestaña ``Analítica''.
+La Figura~\ref{fig:pipeline} resume el recorrido. El flujo es: (1) landing zone con los CSV crudos en
+\texttt{/root/fittrack/dataset/data}; (2) ETL con esquema explícito, limpieza y escritura de Parquet
+en \texttt{analytics/curated}; (3) KPIs con Spark SQL/DataFrame \cite{spark} y escritura de
+\texttt{analytics.json}; (4) publicación por el servicio \texttt{analytics}; y (5) consumo por la
+pestaña ``Analítica''.
 
 \subsection{Reglas de limpieza}
+El ETL aplica un conjunto fijo de reglas, resumido en el Cuadro~\ref{tab:limpieza-reglas}. Cada una
+responde a una suciedad sembrada a propósito en el dataset: identificadores repetidos, fechas en dos
+formatos, pesos en libras, valores imposibles y metas expresadas en unidades distintas. Solo se
+descartan filas en dos casos, duplicados y pesos fuera de rango; los nulos se conservan y las
+agregaciones los ignoran.
+
 \begin{table}[t]
 \centering
 \caption{Reglas de limpieza aplicadas en el ETL.}
@@ -259,8 +276,9 @@ El frontend añadió la pestaña ``Analítica'', con tarjetas de KPIs, tablas y 
 el backend \path{/api/analytics/*} hacia \texttt{analytics:8006}.
 
 \subsection{Reproducibilidad}
-El repositorio incluye \texttt{README.md} con el paso a paso (stack, dataset, Spark, imágenes y
-pruebas), \texttt{spark/run\_all.sh} y scripts individuales con memoria configurable,
+El repositorio del proyecto \cite{fittrack} incluye \texttt{README.md} con el paso a paso (stack,
+dataset, Spark, imágenes y pruebas), \texttt{spark/run\_all.sh} y scripts individuales con memoria
+configurable,
 \texttt{tests/load/load\_test.py} sin dependencias externas, \texttt{.env.example} y
 \texttt{dataset/} con generador, validador y diccionario.
 
@@ -273,6 +291,12 @@ metas (MySQL); cálculo de progreso (Mongo + llamada a measurements); y
 (HTTP 200).
 
 \subsection{Limpieza}
+De las 8.462.080 filas crudas quedaron 8.203.047 curadas (2.881.725 medidas y 5.321.322 rutinas), un
+descarte neto de 259.033 filas (3,1\,\%), concentrado en duplicados y pesos fuera de rango. El
+Cuadro~\ref{tab:limpieza} detalla cuántos registros tocó cada regla: el volumen alto no viene de
+perder datos, sino de corregirlos en sitio, como las 24.728 fechas en formato \texttt{dd/mm/aaaa} y
+los 14.659 usuarios con peso en libras.
+
 \begin{table}[t]
 \centering
 \caption{Resultados de limpieza del dataset.}
@@ -295,6 +319,12 @@ Usuarios con peso en libras & 14.659 \\
 \end{table}
 
 \subsection{KPIs y validación}
+El Cuadro~\ref{tab:kpis} resume los KPIs sobre el dataset completo. Para descartar que sean artefactos
+del cálculo, el generador deja patrones sembrados y el pipeline los recupera: el
+Cuadro~\ref{tab:validacion} contrasta el valor esperado con el obtenido en los cinco casos. Las
+correlaciones de peso son las más contundentes: $-0{,}595$ al bajar de peso y $+0{,}597$ al ganar
+músculo, frente a umbrales de $-0{,}3$ y $+0{,}3$.
+
 \begin{table}[t]
 \centering
 \caption{KPIs principales.}
@@ -334,7 +364,7 @@ Metas ambiciosas (baja$\rightarrow$alta) & baja $>$ alta & 29,6 / 13,9 / 7,4\,\%
 
 \subsection{Carga, escalabilidad y estrés}
 Prueba de carga: 500 peticiones a \texttt{/api/measurements/}, concurrencia 20, desde el host Windows
-contra HAProxy.
+contra HAProxy. El Cuadro~\ref{tab:carga} compara los tres escenarios.
 
 \begin{table}[t]
 \centering
@@ -361,6 +391,9 @@ La prueba multi-nodo se hizo con \texttt{users} repartido 2+1 y \texttt{measurem
 throughput baja a 53--54 RPS: la red overlay y el worker de 2 cores pesan más que el beneficio de
 repartir en este laboratorio.
 
+El Cuadro~\ref{tab:estres} resume la prueba de estrés, pensada para encontrar el punto de saturación
+y no el mejor caso.
+
 \begin{table}[t]
 \centering
 \caption{Prueba de estrés con \texttt{hey} (30 s por nivel).}
@@ -386,7 +419,7 @@ HAProxy volvió a mostrar todos los backends en \texttt{UP}.
 Prueba de failover: 8.000 peticiones a \texttt{/api/users/me}, concurrencia 20, con \texttt{users} en
 3 réplicas (1 en el servidor + 2 en el cliente). A mitad de la prueba se mató el contenedor de una
 tarea con \texttt{docker kill}, sin aviso previo a Swarm. Se corrió además un control idéntico sin
-matar nada.
+matar nada; el Cuadro~\ref{tab:failover} compara ambos.
 
 \begin{table}[t]
 \centering
@@ -428,8 +461,8 @@ de datos, el servicio no se recupera solo.
 \end{figure}
 
 La pestaña muestra 5 tarjetas de KPIs, retención por semanas y por cohorte, metas por objetivo, peso
-por objetivo, registros por mes, rutinas por tipo y una validación con etiquetas verdes. La captura
-completa está en \texttt{report/figuras/dashboard.jpeg}.
+por objetivo, registros por mes, rutinas por tipo y una validación con etiquetas verdes
+(Figura~\ref{fig:dashboard}). La captura completa está en \texttt{report/figuras/dashboard.jpeg}.
 
 \subsection{Discusión}
 \textbf{Fortalezas}: solución completa, reproducible y con evidencia; separación clara entre app y
@@ -456,26 +489,26 @@ Trabajo futuro: (1) Spark de dos nodos con un filesystem compartido (NFS) o HDFS
 no quede repartido entre nodos y medir 1 vs 2 workers; (2) replicar las bases de datos
 (Postgres/MySQL/Mongo) para eliminar el punto único de fallo; (3) \texttt{option redispatch} y
 \texttt{retries} en HAProxy para que el cliente no reciba los \texttt{502} del hueco entre la muerte
-de la tarea y la retirada de su IP del DNS; (4) streaming con Structured Streaming para KPIs en
-tiempo real; (5) observabilidad con Prometheus/Grafana y alertas; (6) CI/CD para construir y
-publicar imágenes automáticamente; y (7) datos reales anonimizados, si el profesor lo permite, para
-contrastar los hallazgos.
+de la tarea y la retirada de su IP del DNS; (4) streaming con Structured Streaming \cite{streaming}
+para KPIs en tiempo real; (5) observabilidad con Prometheus/Grafana y alertas; (6) CI/CD para
+construir y publicar imágenes automáticamente; y (7) datos reales anonimizados, si el profesor lo
+permite, para contrastar los hallazgos.
 
 \begin{thebibliography}{8}
 \bibitem{docker} Docker Inc., \emph{Docker Swarm mode overview}.
 \url{https://docs.docker.com/engine/swarm/}
-\bibitem{haproxy} HAProxy Technologies, \emph{HAProxy Configuration Manual}.
-\url{https://docs.haproxy.org/}
 \bibitem{spark} Apache Software Foundation, \emph{Spark SQL, DataFrames and Datasets Guide}.
 \url{https://spark.apache.org/docs/latest/sql-programming-guide.html}
-\bibitem{streaming} Apache Software Foundation, \emph{Structured Streaming Programming Guide}.
-\url{https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html}
-\bibitem{fastapi} FastAPI, \emph{FastAPI documentation}. \url{https://fastapi.tiangolo.com/}
-\bibitem{fittrack} FitTrack, repositorio del proyecto, rama \texttt{proyecto-final}.
-\url{https://github.com/nicocpxmd/fittrack}
-\bibitem{dataset} FitTrack-Synth, generador y validador del dataset, carpeta \texttt{dataset/}.
 \bibitem{ieee} IEEE, \emph{IEEE Conference Template}.
 \url{https://www.ieee.org/conferences/publishing/templates.html}
+\bibitem{dataset} FitTrack-Synth, generador y validador del dataset, carpeta \texttt{dataset/}.
+\bibitem{haproxy} HAProxy Technologies, \emph{HAProxy Configuration Manual}.
+\url{https://docs.haproxy.org/}
+\bibitem{fastapi} FastAPI, \emph{FastAPI documentation}. \url{https://fastapi.tiangolo.com/}
+\bibitem{fittrack} FitTrack, repositorio del proyecto, rama \texttt{proyecto-final}, tag
+\texttt{v3.6-proyecto-final}. \url{https://github.com/nicocpxmd/fittrack}
+\bibitem{streaming} Apache Software Foundation, \emph{Structured Streaming Programming Guide}.
+\url{https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html}
 \end{thebibliography}
 
 \end{document}

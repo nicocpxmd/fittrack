@@ -1,7 +1,9 @@
 # FitTrack: microservicios en Docker Swarm y análisis distribuido con Apache Spark
 
-**Autores:** [Nombres del grupo]
+**Autores:** Juan Camilo Serrano, Lucio Matías Melendez Rojas, Juan David Ocampo Gutierrez, Nicolás Castro Pacheco, Diego Fernando Asprilla Palacios
+
 **Curso:** Redes e Infraestructura — Proyecto final
+
 **Fecha:** noviembre de 2026
 
 ## Resumen
@@ -66,6 +68,10 @@ La limitación principal es que los datos son sintéticos: los resultados no des
 real, pero sí permiten evaluar el pipeline, la limpieza y la capacidad de recuperar patrones.
 
 ### 2.2 Alternativas evaluadas
+
+Se compararon las opciones disponibles para cada dimensión del despliegue. El criterio fue doble: usar
+lo que ya estaba disponible en el laboratorio y caber en 3,8 GiB de RAM por nodo, porque el objetivo
+del curso es demostrar el funcionamiento, no maximizar la sofisticación de las herramientas.
 
 | Dimensión | Alternativas | Decisión y motivo |
 |---|---|---|
@@ -136,6 +142,11 @@ dos nodos.
 5. **Dashboard:** la pestaña “Analítica” consume el JSON y renderiza KPIs y tablas.
 
 ### 3.4 Reglas de limpieza
+
+El ETL aplica un conjunto fijo de reglas. Cada una responde a una suciedad sembrada a propósito en el
+dataset: identificadores repetidos, fechas en dos formatos, pesos en libras, valores imposibles y
+metas expresadas en unidades distintas. Solo se descartan filas en dos casos, duplicados y pesos
+fuera de rango; los nulos se conservan y las agregaciones los ignoran.
 
 | Problema | Regla |
 |---|---|
@@ -213,6 +224,11 @@ Se probó el flujo completo contra `http://192.168.100.2:8080`:
 
 ### 5.2 Limpieza
 
+De las 8.462.080 filas crudas quedaron 8.203.047 curadas (2.881.725 medidas y 5.321.322 rutinas), un
+descarte neto de 259.033 filas (3,1 %), concentrado en duplicados y pesos fuera de rango. El volumen
+alto no viene de perder datos, sino de corregirlos en sitio: 24.728 fechas en formato `dd/mm/aaaa` y
+14.659 usuarios con peso en libras.
+
 | Métrica | Valor |
 |---|---|
 | Filas crudas | 8.462.080 |
@@ -225,6 +241,11 @@ Se probó el flujo completo contra `http://192.168.100.2:8080`:
 | Usuarios con peso en libras | 14.659 |
 
 ### 5.3 KPIs y validación
+
+Los KPIs se calcularon sobre el dataset completo. Para descartar que sean artefactos del cálculo, el
+generador deja patrones sembrados y el pipeline los recupera: la segunda tabla contrasta el valor
+esperado con el obtenido en los cinco casos. Las correlaciones de peso son las más contundentes:
+−0,595 al bajar de peso y +0,597 al ganar músculo, frente a umbrales de −0,3 y +0,3.
 
 | KPI | Valor |
 |---|---|
