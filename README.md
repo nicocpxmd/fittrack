@@ -494,6 +494,31 @@ Prueba de estrés con `hey`, 30 segundos por nivel:
 El RPS de `hey` cuenta solicitudes intentadas; el goodput baja a 53,6 RPS (100 conexiones) y 37,2
 RPS (200) por los timeouts de 5 s. La meseta de ~60 RPS marca el punto de saturación del laboratorio.
 
+### 8.5 Prueba de failover
+
+Con 3 réplicas de `users`, matar el contenedor de una tarea durante una carga sostenida:
+
+```bash
+# en el manager, mientras corre la carga
+docker ps --filter name=fittrack_users --format '{{.ID}}  {{.Names}}'
+docker kill $(docker ps -q --filter name=fittrack_users | head -n1)
+```
+
+Resultados de referencia (8.000 peticiones a `/api/users/me`, concurrencia 20):
+
+| Escenario | Éxito | Errores | RPS | p95 |
+|---|---|---|---|---|
+| Control (sin fallo) | 100 % | 0 | 113,11 | 400,38 ms |
+| Con failover | 99,70 % | 24 (0,30 %) | 97,61 | 400,66 ms |
+
+Los 24 errores se concentran en los 8 segundos que tarda Swarm en recrear la tarea: 22 conexiones
+cortadas (código 0) y 2 `502` de HAProxy. El p95 no cambia, así que las réplicas sobrevivientes
+absorben el tráfico. Para que el cliente no vea los `502`, falta `option redispatch` y `retries` en
+`haproxy/haproxy.cfg`.
+
+Esta prueba solo cubre el fallo de una **tarea**. Si cae el nodo o la base de datos, el servicio no
+se recupera solo.
+
 ## 9. Validación del pipeline
 
 El JSON de analítica incluye `validacion` con los patrones sembrados por el generador:

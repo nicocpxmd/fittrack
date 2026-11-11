@@ -41,8 +41,9 @@ procesa un dataset sintético de 100.000 usuarios y 8,4 millones de filas, aplic
 duplicados, fechas y unidades, y calcula KPIs de retención, adherencia, metas y evolución de peso.
 Los resultados se publican por una API y se muestran en una pestaña ``Analítica''. Las pruebas de
 carga muestran una mejora de 1,89$\times$ en RPS al pasar de una a tres réplicas, y la validación
-contra los patrones sembrados confirma que el análisis recupera las señales del dataset. El trabajo
-documenta las decisiones, los problemas encontrados y una guía reproducible.
+contra los patrones sembrados confirma que el análisis recupera las señales del dataset. En la prueba
+de failover, matar una de tres réplicas mantuvo el servicio en 99,70\,\% de éxito y recuperó la tarea
+en 8 segundos. El trabajo documenta las decisiones, los problemas encontrados y una guía reproducible.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -381,6 +382,43 @@ y a 37,2 RPS con 200, por los timeouts de cliente a 5 s. La meseta de $\approx$6
 de timeouts desde 100 conexiones marcan el punto de saturación del laboratorio. Después del estrés,
 HAProxy volvió a mostrar todos los backends en \texttt{UP}.
 
+\subsection{Tolerancia a fallos}
+Prueba de failover: 8.000 peticiones a \texttt{/api/users/me}, concurrencia 20, con \texttt{users} en
+3 réplicas (1 en el servidor + 2 en el cliente). A mitad de la prueba se mató el contenedor de una
+tarea con \texttt{docker kill}, sin aviso previo a Swarm. Se corrió además un control idéntico sin
+matar nada.
+
+\begin{table}[t]
+\centering
+\caption{Prueba de failover con 3 réplicas de \texttt{users}.}
+\label{tab:failover}
+\small
+\begin{tabularx}{\columnwidth}{@{}Y r r r r@{}}
+\toprule
+Escenario & Éxito & Errores & RPS & p95 \\
+\midrule
+Control (sin fallo) & 100\,\% & 0 & 113,11 & 400,38 ms \\
+Con failover & \textbf{99,70\,\%} & 24 (0,30\,\%) & 97,61 & 400,66 ms \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Los 24 errores se concentran en la ventana de 8 segundos del failover, no se reparten por la prueba:
+22 son conexiones cortadas (código 0, peticiones ya enviadas al contenedor que murió) y 2 son
+\texttt{502} de HAProxy. Sobre las $\approx$780 peticiones que pasaron en esa ventana falló cerca del
+3\,\%; el 99,7\,\% del total no notó nada. El p95 quedó igual que en el control (400,66 vs
+400,38 ms): las dos réplicas sobrevivientes absorbieron el tráfico sin degradar la latencia.
+
+La línea de tiempo de HAProxy, muestreada cada segundo, da 8 segundos de recuperación: pasó por
+\texttt{MAINT (resolution)} a las 16:02:10, \texttt{UP 1/3} a las 16:02:16 y \texttt{UP} a las
+16:02:18. El \texttt{502} se explica por la configuración: HAProxy usa \texttt{server-template} con
+resolución DNS de Docker, no health checks HTTP activos. Al morir el contenedor su IP desaparece del
+DNS y HAProxy la retira en el siguiente ciclo; en ese hueco todavía puede enviar una petición a la IP
+muerta. Con \texttt{option redispatch} y \texttt{retries} el cliente no lo vería.
+
+La prueba demuestra tolerancia a fallos \textbf{a nivel de tarea}. Si cae el nodo completo o la base
+de datos, el servicio no se recupera solo.
+
 \subsection{Dashboard}
 \begin{figure}[t]
 \centering
@@ -397,8 +435,9 @@ completa está en \texttt{report/figuras/dashboard.jpeg}.
 \textbf{Fortalezas}: solución completa, reproducible y con evidencia; separación clara entre app y
 analítica; validación contra patrones conocidos; documentación de problemas y decisiones.
 \textbf{Limitaciones}: dataset sintético; un solo worker de Spark; las bases son instancias únicas;
-los KPIs son batch, no tiempo real; la distribución multi-nodo está probada, pero el throughput no
-mejora por la red overlay y el worker de 2 cores; el servidor compite con el stack.
+el failover probado es de tarea, no de nodo ni de base; los KPIs son batch, no tiempo real; la
+distribución multi-nodo está probada, pero el throughput no mejora por la red overlay y el worker de
+2 cores; el servidor compite con el stack.
 \textbf{Riesgos}: memoria y
 swap al correr Spark con el stack; tareas huérfanas de intentos anteriores; la rama \texttt{main}
 del repo no refleja la versión Docker.
@@ -406,18 +445,21 @@ del repo no refleja la versión Docker.
 \section{Conclusiones y trabajo futuro}
 Se desplegó FitTrack en Docker Swarm con balanceo, se construyó un pipeline de Spark para 8,4 M de
 filas y se publicaron los resultados en el dashboard. Las pruebas funcionales, de carga, de
-distribución multi-nodo y de estrés confirman que la solución cumple los objetivos. El escalado a
-tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 errores); la distribución entre
-los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a 53--54 RPS por la red
-overlay y el worker de 2 cores. El estrés marcó una meseta de $\approx$60 RPS y timeouts desde 100
-conexiones.
+distribución multi-nodo, de estrés y de failover confirman que la solución cumple los objetivos. El
+escalado a tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 errores); la
+distribución entre los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a
+53--54 RPS por la red overlay y el worker de 2 cores. El estrés marcó una meseta de $\approx$60 RPS y
+timeouts desde 100 conexiones. En el failover, matar una de tres tareas dejó el servicio en
+99,70\,\% de éxito, con el p95 intacto y recuperación en 8 segundos.
 
 Trabajo futuro: (1) Spark de dos nodos con un filesystem compartido (NFS) o HDFS para que el Parquet
 no quede repartido entre nodos y medir 1 vs 2 workers; (2) replicar las bases de datos
-(Postgres/MySQL/Mongo) para eliminar el punto único de fallo; (3) streaming con Structured Streaming
-para KPIs en tiempo real; (4) observabilidad con Prometheus/Grafana y alertas; (5) CI/CD para
-construir y publicar imágenes automáticamente; y (6) datos reales anonimizados, si el profesor lo
-permite, para contrastar los hallazgos.
+(Postgres/MySQL/Mongo) para eliminar el punto único de fallo; (3) \texttt{option redispatch} y
+\texttt{retries} en HAProxy para que el cliente no reciba los \texttt{502} del hueco entre la muerte
+de la tarea y la retirada de su IP del DNS; (4) streaming con Structured Streaming para KPIs en
+tiempo real; (5) observabilidad con Prometheus/Grafana y alertas; (6) CI/CD para construir y
+publicar imágenes automáticamente; y (7) datos reales anonimizados, si el profesor lo permite, para
+contrastar los hallazgos.
 
 \begin{thebibliography}{8}
 \bibitem{docker} Docker Inc., \emph{Docker Swarm mode overview}.

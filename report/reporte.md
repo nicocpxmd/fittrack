@@ -14,8 +14,9 @@ procesa un dataset sintético de 100.000 usuarios y 8,4 millones de filas, aplic
 duplicados, fechas y unidades, y calcula KPIs de retención, adherencia, metas y evolución de peso.
 Los resultados se publican por una API y se muestran en una pestaña “Analítica”. Las pruebas de carga
 muestran una mejora de 1,89× en RPS al pasar de una a tres réplicas, y la validación contra los
-patrones sembrados confirma que el análisis recupera las señales del dataset. El trabajo documenta
-las decisiones, los problemas encontrados y una guía reproducible.
+patrones sembrados confirma que el análisis recupera las señales del dataset. En la prueba de
+failover, matar una de tres réplicas mantuvo el servicio en 99,70 % de éxito y recuperó la tarea en
+8 segundos. El trabajo documenta las decisiones, los problemas encontrados y una guía reproducible.
 
 **Palabras clave:** Docker Swarm, microservicios, Apache Spark, análisis distribuido, HAProxy,
 dashboard, reproducibilidad.
@@ -274,19 +275,53 @@ El RPS de `hey` cuenta solicitudes intentadas. El goodput baja a 53,6 RPS con 10
 desde 100 conexiones marcan el punto de saturación del laboratorio. Después del estrés, HAProxy
 volvió a mostrar todos los backends en `UP`.
 
-### 5.5 Dashboard
+### 5.5 Tolerancia a fallos
+
+Prueba de failover: 8.000 peticiones a `/api/users/me`, concurrencia 20, con `users` en 3 réplicas
+(1 en el servidor + 2 en el cliente). A mitad de la prueba se mató el contenedor de una tarea con
+`docker kill`, sin previo aviso a Swarm. Se corrió además un control idéntico sin matar nada.
+
+| Escenario | Éxito | Errores | RPS | p95 |
+|---|---|---|---|---|
+| Control (sin fallo) | 100 % | 0 | 113,11 | 400,38 ms |
+| Con failover | **99,70 %** | 24 (0,30 %) | 97,61 | 400,66 ms |
+
+Los 24 errores se concentran en la ventana de 8 segundos del failover, no se reparten por la prueba:
+22 son conexiones cortadas (código 0, peticiones ya enviadas al contenedor que murió) y 2 son `502`
+de HAProxy. Sobre las ~780 peticiones que pasaron en esa ventana, falló cerca del 3 %; el 99,7 % del
+total no notó nada. El p95 quedó igual que en el control (400,66 vs 400,38 ms): las dos réplicas
+sobrevivientes absorbieron el tráfico sin degradar la latencia.
+
+La línea de tiempo de HAProxy, muestreada cada segundo, da 8 segundos de recuperación:
+
+```
+16:02:10  users1=MAINT (resolution)   ← muere la tarea, desaparece del DNS del servicio
+16:02:16  users1=UP 1/3               ← tarea nueva arrancando, health check parcial
+16:02:18  users1=UP                   ← recuperado
+```
+
+El `502` se explica por la configuración: HAProxy usa `server-template` con resolución DNS de Docker
+(`resolvers docker`), no health checks HTTP activos. Cuando el contenedor muere, su IP desaparece del
+DNS y HAProxy la retira en el siguiente ciclo; en ese hueco de milisegundos todavía puede mandar una
+petición a la IP muerta. Con `option redispatch` y `retries` el cliente no lo vería.
+
+La prueba demuestra tolerancia a fallos **a nivel de tarea**. Si cae el nodo completo o la base de
+datos, el servicio no se recupera solo: las bases son instancias únicas en `role=server`.
+
+### 5.6 Dashboard
 
 ![Pestaña Analítica](figuras/dashboard.jpeg)
 
 **Figura 4.** Pestaña “Analítica” con KPIs, retención, metas, peso, estacionalidad y validación.
 
-### 5.6 Discusión
+### 5.7 Discusión
 
 - **Fortalezas:** solución completa, reproducible y con evidencia; separación clara entre app y
   analítica; validación contra patrones conocidos; documentación de problemas y decisiones.
-- **Limitaciones:** dataset sintético; un solo worker de Spark; las bases son instancias únicas;
-  los KPIs son batch, no tiempo real; la distribución multi-nodo está probada, pero el throughput
-  no mejora por la red overlay y el worker de 2 cores; el servidor compite con el stack.
+- **Limitaciones:** dataset sintético; un solo worker de Spark; las bases son instancias únicas; el
+  failover probado es de tarea, no de nodo ni de base; los KPIs son batch, no tiempo real; la
+  distribución multi-nodo está probada, pero el throughput no mejora por la red overlay y el worker
+  de 2 cores; el servidor compite con el stack.
 - **Riesgos:** memoria y swap al correr Spark con el stack; tareas huérfanas de intentos anteriores;
   la rama `main` del repo no refleja la versión Docker.
 
@@ -294,11 +329,12 @@ volvió a mostrar todos los backends en `UP`.
 
 Se desplegó FitTrack en Docker Swarm con balanceo, se construyó un pipeline de Spark para 8,4 M de
 filas y se publicaron los resultados en el dashboard. Las pruebas funcionales, de carga, de
-distribución multi-nodo y de estrés confirman que la solución cumple los objetivos. El escalado a
-tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 errores); la distribución entre
-los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a 53–54 RPS por la red
-overlay y el worker de 2 cores. El estrés marcó una meseta de ~60 RPS y timeouts desde 100
-conexiones.
+distribución multi-nodo, de estrés y de failover confirman que la solución cumple los objetivos. El
+escalado a tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 errores); la
+distribución entre los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a
+53–54 RPS por la red overlay y el worker de 2 cores. El estrés marcó una meseta de ~60 RPS y timeouts
+desde 100 conexiones. En el failover, matar una de tres tareas dejó el servicio en 99,70 % de éxito,
+con el p95 intacto y recuperación en 8 segundos.
 
 Trabajo futuro:
 
@@ -306,10 +342,12 @@ Trabajo futuro:
    repartido entre nodos; medir 1 vs 2 workers.
 2. **Replicar las bases de datos** (Postgres/MySQL/Mongo) para eliminar el punto único de fallo;
    hoy el failover es a nivel de tarea, no de base.
-3. **Streaming** con Structured Streaming para KPIs en tiempo real.
-4. **Observabilidad:** métricas de HAProxy, Prometheus/Grafana y alertas.
-5. **CI/CD:** construir y publicar imágenes automáticamente, con pruebas de humo.
-6. **Datos reales** anonimizados, si el profesor lo permite, para contrastar los hallazgos.
+3. **`option redispatch` y `retries` en HAProxy** para que el cliente no reciba los `502` del hueco
+   entre la muerte de la tarea y la retirada de su IP del DNS.
+4. **Streaming** con Structured Streaming para KPIs en tiempo real.
+5. **Observabilidad:** métricas de HAProxy, Prometheus/Grafana y alertas.
+6. **CI/CD:** construir y publicar imágenes automáticamente, con pruebas de humo.
+7. **Datos reales** anonimizados, si el profesor lo permite, para contrastar los hallazgos.
 
 ## Referencias
 

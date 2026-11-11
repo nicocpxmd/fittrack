@@ -14,6 +14,7 @@
 |---|---|---|
 | Microservicios en Docker Swarm | ✅ Desplegado | 7 backends de HAProxy en `UP` |
 | Balanceo y escalado | ✅ Probado | 38,15 → 72,05 RPS en un nodo; 53–54 RPS multi-nodo, 0 errores |
+| Failover de tarea | ✅ Probado | 99,70 % de éxito al matar 1 de 3 réplicas; recuperación en 8 s |
 | Dataset sintético | ✅ 100k usuarios / 8,4 M filas | Validador 24/24 |
 | ETL + KPIs con Spark | ✅ Ejecutado | `analytics/data/analytics.json` |
 | API de analítica | ✅ Funcionando | `/api/analytics/*` |
@@ -22,8 +23,8 @@
 | Informe y diapositivas | 🟡 Borradores | `report/` y `slides/` |
 | Tag de entrega | ✅ Publicado | `v3.4-proyecto-final` |
 
-**Lo que no está hecho:** el PDF IEEE final, las diapositivas en PowerPoint/Google Slides, la prueba
-de failover, el merge a `main` y (opcional) el worker Spark en el cliente.
+**Lo que no está hecho:** el PDF IEEE final, las diapositivas en PowerPoint/Google Slides, el merge a
+`main` y (opcional) el worker Spark en el cliente.
 
 ## 2. Cómo verlo en 5 minutos en tu máquina
 
@@ -68,12 +69,12 @@ replicarlo desde cero, sigue la sección 6 del `README.md`.
 |---|---|---|---|
 | 1 | Informe IEEE: compilar `report/reporte.tex` en Overleaf, revisar 10 páginas, exportar PDF | A | 2026-11-13 |
 | 2 | Diapositivas: pasar `slides/slides.md` a PowerPoint/Google Slides | B | 2026-11-13 |
-| 3 | Failover de HAProxy y captura de evidencia | C | 2026-11-12 |
-| 4 | Merge de `proyecto-final` a `main` con revisión del equipo | D | 2026-11-16 |
-| 5 | Ensayo de los 15 minutos y reparto de bloques | E | 2026-11-17 |
-| 6 | Subir PDF y diapositivas a UAO virtual y al repo | A/E | 2026-11-18 |
+| 3 | Merge de `proyecto-final` a `main` con revisión del equipo | D | 2026-11-16 |
+| 4 | Ensayo de los 15 minutos y reparto de bloques | E | 2026-11-17 |
+| 5 | Subir PDF y diapositivas a UAO virtual y al repo | A/E | 2026-11-18 |
 
 Ajustar los nombres según el equipo. La idea es que cada persona tenga una tarea concreta y una fecha.
+La prueba de failover ya está hecha (2026-11-11) y documentada en la sección 5.5 del informe.
 
 ## 5. Qué necesito de cada uno
 
@@ -136,7 +137,7 @@ Las rutas de archivo son relativas a la raíz del repositorio.
 | Mar 10 | Verificar stack, exportar figuras, repartir tareas |
 | Mié 11 | Informe IEEE con figuras y consistencia |
 | Jue 12 | Diapositivas en PowerPoint/Google Slides |
-| Vie 13 | Failover de HAProxy y ensayo 1 |
+| Vie 13 | Ensayo 1 con la evidencia de failover |
 | Sáb 14 – Dom 15 | Ajustes |
 | Lun 16 | Merge a `main` con revisión |
 | Mar 17 | Ensayo 2 y capturas de respaldo |
