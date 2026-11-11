@@ -93,7 +93,8 @@ La prueba de failover ya está hecha (2026-11-11) y documentada en la sección 5
 - Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
   (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar
   el stack y revisar con el equipo.
-- Los tags `v3.2`, `v3.3` y `v3.4` se conservan por si hay enlaces externos; **no se mueven**.
+- Los tags `v3.3`, `v3.4` y `v3.5` se conservan por si hay enlaces externos; **no se mueven**. `v3.2`
+  se eliminó el 2026-11-11 y sus commits siguen en la rama.
 - Mientras tanto, el link seguro para el Excel es:
   `https://github.com/nicocpxmd/fittrack/tree/v3.6-proyecto-final`.
 
