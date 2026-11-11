@@ -89,7 +89,7 @@ services:
     deploy: *servicio
 
   goals:
-    image: nicocpxm/fittrack-goals:v1
+    image: nicocpxm/fittrack-goals:v2
     environment:
       GOALS_PORT: "8004"
       DB_HOST: mysql
