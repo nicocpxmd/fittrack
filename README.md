@@ -375,15 +375,26 @@ de HAProxy, `http://<worker-ip>:8404` (admin / admin).
 
 ### 6.6 Escalar
 
+El stack ya declara **3 réplicas** para `users` y `measurements`, que es la topología de las pruebas
+de carga y failover. Un `docker stack deploy` las mantiene; no hay que escalar a mano después.
+
+Para cambiarlas en caliente:
+
 ```bash
 docker service scale fittrack_users=3 fittrack_measurements=3
 docker stack services fittrack
 ```
 
-Las réplicas de servicios sin estado pueden repartirse entre los nodos según los labels y la
-disponibilidad. El stack incluye `max_replicas_per_node: 2` y `spread: node.labels.role`: con 3
-réplicas, se reparten 2+1 entre los nodos. En la prueba del laboratorio, `users` quedó 2+1 y
-`measurements` 1+2. Los servicios con estado permanecen en `role=server`.
+Ojo: `docker service scale` no modifica `docker-stack.yml`. El siguiente `docker stack deploy`
+vuelve a lo que diga el archivo, así que si quieres conservar otro número, edítalo ahí.
+
+Las réplicas de servicios sin estado se reparten entre los nodos según los labels y la
+disponibilidad. `max_replicas_per_node: 2` y `spread: node.labels.role` hacen que con 3 réplicas
+caigan 2+1. En el laboratorio, `users` quedó 2+1 y `measurements` 1+2.
+
+**Si tu Swarm tiene un solo nodo**, `max_replicas_per_node: 2` deja la tercera tarea en estado
+`Pending`. Baja a 2 réplicas en `docker-stack.yml` o sube ese límite. Los servicios con estado
+permanecen en `role=server`.
 
 ### 6.7 Notas del laboratorio
 

@@ -1,9 +1,9 @@
 # Handoff del proyecto final — FitTrack + Spark
 
-**Fecha:** 2026-11-10
+**Fecha:** 2026-11-11
 **Entrega:** viernes 2026-11-20
 **Versión de trabajo:** rama `proyecto-final` (README reproducible)
-**Snapshot de entrega:** tag `v3.4-proyecto-final`
+**Snapshot de entrega:** tag `v3.5-proyecto-final`
 
 > **Para instalar y ejecutar, sigue el [`README.md`](../README.md).** Este documento es el estado del
 > proyecto y el reparto de tareas del equipo; no repite la instalación.
@@ -21,7 +21,7 @@
 | Pestaña “Analítica” | ✅ Funcionando | Captura en `report/figuras/dashboard.jpeg` |
 | README reproducible | ✅ En el repo | `README.md` |
 | Informe y diapositivas | 🟡 Borradores | `report/` y `slides/` |
-| Tag de entrega | ✅ Publicado | `v3.4-proyecto-final` |
+| Tag de entrega | ✅ Publicado | `v3.5-proyecto-final` |
 
 **Lo que no está hecho:** el PDF IEEE final, las diapositivas en PowerPoint/Google Slides, el merge a
 `main` y (opcional) el worker Spark en el cliente.
@@ -88,21 +88,21 @@ La prueba de failover ya está hecha (2026-11-11) y documentada en la sección 5
 
 ## 6. Reglas de merge
 
-- La entrega vive en `proyecto-final` y en el tag `v3.4-proyecto-final`.
+- La entrega vive en `proyecto-final` y en el tag `v3.5-proyecto-final`.
 - `main` no refleja la versión Docker; el merge es el pendiente #18 de `infraeip`.
 - Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
   (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar
   el stack y revisar con el equipo.
-- Después: tag nuevo `v3.3` si se decide; **no mover `v3.2`**.
+- Los tags `v3.2`, `v3.3` y `v3.4` se conservan por si hay enlaces externos; **no se mueven**.
 - Mientras tanto, el link seguro para el Excel es:
-  `https://github.com/nicocpxmd/fittrack/tree/v3.4-proyecto-final`.
+  `https://github.com/nicocpxmd/fittrack/tree/v3.5-proyecto-final`.
 
 ## 7. Enlaces
 
 | Qué | Dónde |
 |---|---|
 | Repo | `https://github.com/nicocpxmd/fittrack` |
-| Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v3.4-proyecto-final` |
+| Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v3.5-proyecto-final` |
 | README (instalación) | `https://github.com/nicocpxmd/fittrack/blob/proyecto-final/README.md` |
 | Informe (PDF) | `report/reporte.pdf` |
 | Informe (LaTeX) | `report/reporte.tex` |
@@ -148,7 +148,7 @@ Las rutas de archivo son relativas a la raíz del repositorio.
 ## 10. Mensaje para el grupo
 
 > Hola equipo. La parte operativa del proyecto está terminada en la rama `proyecto-final`; el
-> snapshot de entrega es el tag `v3.4-proyecto-final`. Para verla en su máquina no necesitan mis
+> snapshot de entrega es el tag `v3.5-proyecto-final`. Para verla en su máquina no necesitan mis
 > rutas ni mis VMs: clonan con `-b proyecto-final`, siguen el `README.md` y ejecutan
 > `docker compose up -d --build`. Cada uno crea su propio usuario; no hay credenciales compartidas.
 >

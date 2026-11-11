@@ -58,7 +58,10 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: "60"
-    deploy: *servicio
+    # 3 réplicas: reproduce la topología de las pruebas de carga y de failover.
+    deploy:
+      <<: *servicio
+      replicas: 3
 
   measurements:
     image: nicocpxm/fittrack-measurements:v1
@@ -66,7 +69,10 @@ services:
       MONGO_URL: mongodb://mongo:27017
       DB_NAME: fittrack_measurements
       USERS_SERVICE_URL: http://users:8002
-    deploy: *servicio
+    # 3 réplicas: reproduce la topología de las pruebas de carga y de failover.
+    deploy:
+      <<: *servicio
+      replicas: 3
 
   progress:
     image: nicocpxm/fittrack-progress:v1
