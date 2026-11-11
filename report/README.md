@@ -3,7 +3,7 @@
 Archivos:
 
 - `reporte.tex`: informe en LaTeX con plantilla IEEE (`IEEEtran`). Es la versión para compilar.
-- `reporte.pdf`: PDF compilado con Tectonic (4 páginas).
+- `reporte.pdf`: PDF compilado con Tectonic (5 páginas).
 - `reporte.md`: borrador en Markdown con el mismo contenido.
 - `diagramas.md`: diagramas Mermaid de componentes, despliegue y pipeline.
 - `figuras/`: `arquitectura.png`, `despliegue.png`, `pipeline.png`, `dashboard.jpeg` y

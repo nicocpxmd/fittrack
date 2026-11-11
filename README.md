@@ -131,6 +131,10 @@ Edita `.env`:
 | `DB_PASSWORD` | contraseña root de MySQL |
 | `SECRET_KEY` | cadena aleatoria de 64 caracteres hex |
 
+> `POSTGRES_PASSWORD` y `DB_PASSWORD` las eliges tú para este proyecto. **No son contraseñas de una
+> cuenta ya existente** (GitHub, Docker Hub, correo, etc.). Deben ser nuevas, distintas entre sí y
+> alfanuméricas.
+
 Generar `SECRET_KEY`:
 
 ```bash
@@ -377,7 +381,9 @@ docker stack services fittrack
 ```
 
 Las réplicas de servicios sin estado pueden repartirse entre los nodos según los labels y la
-disponibilidad. Los servicios con estado permanecen en `role=server`.
+disponibilidad. El stack incluye `max_replicas_per_node: 2` y `spread: node.labels.role`: con 3
+réplicas, se reparten 2+1 entre los nodos. En la prueba del laboratorio, `users` quedó 2+1 y
+`measurements` 1+2. Los servicios con estado permanecen en `role=server`.
 
 ### 6.7 Notas del laboratorio
 
@@ -467,10 +473,26 @@ dominios reservados como `.test`). No uses una cuenta real.
 
 Resultados de referencia:
 
-| Réplicas | RPS | p50 | p95 | Errores |
+| Escenario | RPS | p50 | p95 | Errores |
 |---|---|---|---|---|
-| 1 | 38,15 | 513,09 ms | 654,58 ms | 0 |
-| 3 | **72,05** | **272,48 ms** | **411,70 ms** | 0 |
+| 1 réplica | 38,15 | 513,09 ms | 654,58 ms | 0 |
+| 3 réplicas en un nodo | **72,05** | **272,48 ms** | **411,70 ms** | 0 |
+| 3 réplicas en dos nodos | 53,31–54,22 | 278–304 ms | 839–871 ms | 0 |
+
+La prueba multi-nodo repartió `users` 2+1 y `measurements` 1+2. El throughput baja frente a las 3
+réplicas en un nodo por la red overlay y el worker de 2 cores; la distribución funciona, pero no es
+una mejora de rendimiento en este laboratorio.
+
+Prueba de estrés con `hey`, 30 segundos por nivel:
+
+| Conexiones | RPS | p50 | p95 | Timeouts |
+|---|---|---|---|---|
+| 50 | 59,17 | 605 ms | 2.237 ms | 0 |
+| 100 | 58,57 | 726 ms | 4.427 ms | 152 |
+| 200 | 61,05 | 1.575 ms | 4.567 ms | 797 |
+
+El RPS de `hey` cuenta solicitudes intentadas; el goodput baja a 53,6 RPS (100 conexiones) y 37,2
+RPS (200) por los timeouts de 5 s. La meseta de ~60 RPS marca el punto de saturación del laboratorio.
 
 ## 9. Validación del pipeline
 
@@ -489,7 +511,48 @@ La correspondencia entre el dataset y las tablas de la app está en
 
 ### El puerto 8080 o 8404 está ocupado
 
-Cambia el mapeo en `docker-compose.yml` (`"8080:80"`, `"8404:8404"`) o detén el proceso que los usa.
+Primero identifica qué lo está usando:
+
+```bash
+docker compose ls
+docker ps --format 'table {{.Names}}\t{{.Ports}}'
+```
+
+Si es otro stack de Compose, deténlo desde su carpeta:
+
+```bash
+cd <carpeta-del-stack-viejo>
+docker compose down
+```
+
+Si el HAProxy del stack nuevo quedó creado sin puertos por el conflicto, recréalo:
+
+```bash
+cd <carpeta-del-stack-nuevo>
+docker compose up -d --force-recreate haproxy
+```
+
+Si es otro proceso, ciérralo o cambia el mapeo en `docker-compose.yml` (`"8080:80"`,
+`"8404:8404"`).
+
+### El stack falla con `fe_sendauth: no password supplied`
+
+`docker stack deploy` **no lee `.env` automáticamente**. Exporta las variables en la misma shell
+donde despliegas:
+
+```bash
+cd /root/fittrack
+set -a
+. ./.env
+set +a
+docker stack deploy -c docker-stack.yml fittrack
+```
+
+Si el error persiste, revisa que `.env` tenga valores (sin mostrarlos):
+
+```bash
+awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/{print $1, "len=" length($2)}' .env
+```
 
 ### `analytics` responde 503
 

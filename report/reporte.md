@@ -242,19 +242,37 @@ Se probó el flujo completo contra `http://192.168.100.2:8080`:
 | Correlación ganar músculo | > 0,3 | +0,597 |
 | Metas ambiciosas (baja → alta) | baja > alta | 29,6 % → 13,9 % → 7,4 % |
 
-### 5.4 Pruebas de carga y escalabilidad
+### 5.4 Pruebas de carga, escalabilidad y estrés
 
-Prueba: 500 peticiones a `/api/measurements/`, concurrencia 20, desde el host Windows contra HAProxy.
+Prueba de carga: 500 peticiones a `/api/measurements/`, concurrencia 20, desde el host Windows contra
+HAProxy.
 
-| Réplicas | RPS | p50 | p95 | Errores |
+| Escenario | RPS | p50 | p95 | Errores |
 |---|---|---|---|---|
-| 1 | 38,15 | 513,09 ms | 654,58 ms | 0 |
-| 3 | 72,05 | 272,48 ms | 411,70 ms | 0 |
+| 1 réplica | 38,15 | 513,09 ms | 654,58 ms | 0 |
+| 3 réplicas en un nodo | **72,05** | **272,48 ms** | **411,70 ms** | 0 |
+| 3 réplicas en dos nodos | 53,31–54,22 | 278–304 ms | 839–871 ms | 0 |
 
-Mejora de **1,89×** en RPS, −47 % en p50 y −37 % en p95. La primera medición con tres réplicas dio
-p95 de 3.485 ms porque el worker de Spark seguía vivo y el servidor usaba 913 MiB de swap; al
-detener Spark, la comparación fue limpia. Esto muestra que el escalado horizontal funciona, pero
-compite por CPU y memoria con el procesamiento batch.
+El escalado en un mismo nodo mejora **1,89×** en RPS, −47 % en p50 y −37 % en p95. La primera
+medición con tres réplicas dio p95 de 3.485 ms porque el worker de Spark seguía vivo y el servidor
+usaba 913 MiB de swap; al detenerlo, la comparación fue limpia.
+
+La prueba multi-nodo se hizo con `users` repartido 2+1 y `measurements` 1+2 entre `servidorUbuntu` y
+`clienteUbuntu`. La distribución funciona (0 errores), pero el throughput baja a 53–54 RPS: la red
+overlay y el worker de 2 cores pesan más que el beneficio de repartir en este laboratorio.
+
+Prueba de estrés con `hey`, 30 segundos por nivel, contra `/api/measurements/`:
+
+| Conexiones | RPS | p50 | p95 | Timeouts |
+|---|---|---|---|---|
+| 50 | 59,17 | 605 ms | 2.237 ms | 0 |
+| 100 | 58,57 | 726 ms | 4.427 ms | 152 |
+| 200 | 61,05 | 1.575 ms | 4.567 ms | 797 |
+
+El RPS de `hey` cuenta solicitudes intentadas. El goodput baja a 53,6 RPS con 100 conexiones y a
+37,2 RPS con 200, por los timeouts de cliente a 5 s. La meseta de ~60 RPS y la aparición de timeouts
+desde 100 conexiones marcan el punto de saturación del laboratorio. Después del estrés, HAProxy
+volvió a mostrar todos los backends en `UP`.
 
 ### 5.5 Dashboard
 
@@ -266,25 +284,28 @@ compite por CPU y memoria con el procesamiento batch.
 
 - **Fortalezas:** solución completa, reproducible y con evidencia; separación clara entre app y
   analítica; validación contra patrones conocidos; documentación de problemas y decisiones.
-- **Limitaciones:** dataset sintético; un solo worker de Spark; el servidor tiene 3,8 GiB y compite
-  con el stack; los KPIs son batch, no tiempo real; las réplicas de los servicios sin estado siguen
-  fijadas al servidor (el escalado es vertical dentro del nodo).
+- **Limitaciones:** dataset sintético; un solo worker de Spark; las bases son instancias únicas;
+  los KPIs son batch, no tiempo real; la distribución multi-nodo está probada, pero el throughput
+  no mejora por la red overlay y el worker de 2 cores; el servidor compite con el stack.
 - **Riesgos:** memoria y swap al correr Spark con el stack; tareas huérfanas de intentos anteriores;
   la rama `main` del repo no refleja la versión Docker.
 
 ## 6. Conclusiones y trabajo futuro
 
 Se desplegó FitTrack en Docker Swarm con balanceo, se construyó un pipeline de Spark para 8,4 M de
-filas y se publicaron los resultados en el dashboard. Las pruebas funcionales, de carga y de
-validación confirman que la solución cumple los objetivos. El escalado a tres réplicas casi duplicó
-el throughput, con una mejora clara de latencia.
+filas y se publicaron los resultados en el dashboard. Las pruebas funcionales, de carga, de
+distribución multi-nodo y de estrés confirman que la solución cumple los objetivos. El escalado a
+tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 errores); la distribución entre
+los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a 53–54 RPS por la red
+overlay y el worker de 2 cores. El estrés marcó una meseta de ~60 RPS y timeouts desde 100
+conexiones.
 
 Trabajo futuro:
 
 1. **Spark de dos nodos** con un filesystem compartido (NFS) o HDFS para que el Parquet no quede
    repartido entre nodos; medir 1 vs 2 workers.
-2. **Distribuir réplicas entre nodos** quitando la restricción de placement a los servicios sin
-   estado y midiendo el balanceo real.
+2. **Replicar las bases de datos** (Postgres/MySQL/Mongo) para eliminar el punto único de fallo;
+   hoy el failover es a nivel de tarea, no de base.
 3. **Streaming** con Structured Streaming para KPIs en tiempo real.
 4. **Observabilidad:** métricas de HAProxy, Prometheus/Grafana y alertas.
 5. **CI/CD:** construir y publicar imágenes automáticamente, con pruebas de humo.
