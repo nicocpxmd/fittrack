@@ -224,10 +224,10 @@ Se probó el flujo completo contra `http://192.168.100.2:8080`:
 
 ### 5.2 Limpieza
 
-De las 8.462.080 filas crudas quedaron 8.203.047 curadas (2.881.725 medidas y 5.321.322 rutinas), un
-descarte neto de 259.033 filas (3,1 %), concentrado en duplicados y pesos fuera de rango. El volumen
-alto no viene de perder datos, sino de corregirlos en sitio: 24.728 fechas en formato `dd/mm/aaaa` y
-14.659 usuarios con peso en libras.
+De las 8.462.080 filas crudas quedaron 8.418.175 curadas, un descarte neto de 43.905 filas (0,52 %):
+40.980 duplicados y 2.925 pesos fuera de rango. El resto del trabajo no fue eliminar filas sino
+corregirlas en sitio: 24.728 fechas en formato `dd/mm/aaaa` y 14.659 usuarios con peso en libras. Por
+eso el dataset apenas pierde volumen y aun así queda consistente.
 
 | Métrica | Valor |
 |---|---|

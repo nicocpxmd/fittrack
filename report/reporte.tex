@@ -291,11 +291,11 @@ metas (MySQL); cálculo de progreso (Mongo + llamada a measurements); y
 (HTTP 200).
 
 \subsection{Limpieza}
-De las 8.462.080 filas crudas quedaron 8.203.047 curadas (2.881.725 medidas y 5.321.322 rutinas), un
-descarte neto de 259.033 filas (3,1\,\%), concentrado en duplicados y pesos fuera de rango. El
-Cuadro~\ref{tab:limpieza} detalla cuántos registros tocó cada regla: el volumen alto no viene de
-perder datos, sino de corregirlos en sitio, como las 24.728 fechas en formato \texttt{dd/mm/aaaa} y
-los 14.659 usuarios con peso en libras.
+De las 8.462.080 filas crudas quedaron 8.418.175 curadas, un descarte neto de 43.905 filas
+(0,52\,\%): 40.980 duplicados y 2.925 pesos fuera de rango. El Cuadro~\ref{tab:limpieza} detalla
+cuántos registros tocó cada regla. El resto del trabajo no fue eliminar filas sino corregirlas en
+sitio: 24.728 fechas en formato \texttt{dd/mm/aaaa} y 14.659 usuarios con peso en libras. Por eso el
+dataset apenas pierde volumen y aun así queda consistente.
 
 \begin{table}[t]
 \centering
@@ -506,7 +506,7 @@ permite, para contrastar los hallazgos.
 \url{https://docs.haproxy.org/}
 \bibitem{fastapi} FastAPI, \emph{FastAPI documentation}. \url{https://fastapi.tiangolo.com/}
 \bibitem{fittrack} FitTrack, repositorio del proyecto, rama \texttt{proyecto-final}, tag
-\texttt{v3.7-proyecto-final}. \url{https://github.com/nicocpxmd/fittrack}
+\texttt{v3.8-proyecto-final}. \url{https://github.com/nicocpxmd/fittrack}
 \bibitem{streaming} Apache Software Foundation, \emph{Structured Streaming Programming Guide}.
 \url{https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html}
 \end{thebibliography}
