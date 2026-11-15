@@ -1,21 +1,17 @@
 # services/users/app/routers/users.py
-from app.security import create_access_token, get_current_user, verify_reset_token
+from app.security import (
+    create_access_token,
+    get_current_user,
+    verify_reset_token,
+    get_password_hash,
+    verify_password,
+)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 from app import models, schemas
 from app.database import get_db
 
 router = APIRouter()
-
-# Setup for password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
 
 @router.post("/register", response_model=models.UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user: models.UserCreate, db: Session = Depends(get_db)):
@@ -25,7 +21,8 @@ def register(user: models.UserCreate, db: Session = Depends(get_db)):
     
     hashed_password = get_password_hash(user.password)
     user_data = user.model_dump(exclude={"password"})
-    new_user = schemas.User(**user_data, password_hash=hashed_password)
+    # El registro publico siempre crea usuarios normales: el rol nunca viene del cliente.
+    new_user = schemas.User(**user_data, password_hash=hashed_password, role="user")
     
     db.add(new_user)
     db.commit()

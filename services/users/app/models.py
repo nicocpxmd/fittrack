@@ -2,7 +2,7 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from datetime import date, datetime
-from app.schemas import GenderEnum, FitnessGoalEnum, UnitsEnum
+from app.schemas import GenderEnum, FitnessGoalEnum, UnitsEnum, RoleEnum
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -30,6 +30,7 @@ class UserResponse(BaseModel):
     gender: Optional[GenderEnum] = None
     fitness_goal: Optional[FitnessGoalEnum] = None
     preferred_units: UnitsEnum
+    role: RoleEnum = RoleEnum.user
     created_at: datetime
 
     # This config tells Pydantic to read data even if it's not a standard dict (like a SQLAlchemy model)

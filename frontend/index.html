@@ -65,6 +65,13 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const d10=s=>String(s||'').slice(0,10);
 const today=new Date().toLocaleDateString('en-CA');
 let token=localStorage.getItem('token');
+let role=null;
+
+// La pestaña de analitica solo se muestra a los administradores.
+function aplicarRol(){
+  const btn=document.querySelector('#nav button[data-v="analytics"]');
+  if(btn)btn.style.display=role==='admin'?'':'none';
+}
 
 function msg(t,ok){const m=$('#msg');m.textContent=t;m.style.display='block';m.style.background=ok?'#dff1ec':'#fbe4e2';clearTimeout(msg.t);msg.t=setTimeout(()=>m.style.display='none',4000)}
 async function api(url,opt={}){
@@ -87,7 +94,7 @@ async function auth(reg,e){
     token=t.access_token;localStorage.setItem('token',token);start();
   }catch(x){msg(x.message)}
 }
-function logout(){token=null;localStorage.removeItem('token');start()}
+function logout(){token=null;role=null;localStorage.removeItem('token');start()}
 
 async function vMeas(){
   $('#view').innerHTML=`<div class="card"><h2>Registrar medidas</h2><form id="f"><label>Fecha<input type="date" name="date" required value="${today}"></label>${Object.entries(FIELDS).map(([k,l])=>`<label>${l}<input type="number" step="any" min="0.01" name="${k}"></label>`).join('')}<button>Guardar medidas</button></form></div><div class="card tw"><table id="t"></table></div>`;
@@ -186,12 +193,18 @@ async function vAnalytics(){
 }
 
 const V={meas:vMeas,prog:vProg,goals:vGoals,work:vWork,analytics:vAnalytics};
-async function show(v){document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));try{await V[v]()}catch(x){msg(x.message)}}
+async function show(v){
+  if(v==='analytics'&&role!=='admin'){msg('La analítica es solo para administradores.');return}
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  try{await V[v]()}catch(x){msg(x.message)}
+}
 async function start(){
   $('#auth').classList.toggle('hide',!!token);$('#app').classList.toggle('hide',!token);$('#out').classList.toggle('hide',!token);
   $('#who').textContent='';
+  aplicarRol();
   if(!token)return;
-  try{$('#who').textContent=(await api(API.users+'/me')).full_name}catch{return}
+  try{const me=await api(API.users+'/me');$('#who').textContent=me.full_name;role=me.role||'user'}catch{return}
+  aplicarRol();
   show('meas');
 }
 $('#lf').onsubmit=e=>auth(false,e);$('#rf').onsubmit=e=>auth(true,e);

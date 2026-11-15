@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from app.routers import users
 from app.database import engine
 from app import schemas
+from app.bootstrap import asegurar_admin
 
 #logger
 logging.basicConfig(level=logging.INFO)
@@ -13,6 +14,9 @@ logger = logging.getLogger("logger")
 #app
 app = FastAPI(title= "FitTrack - Users API")
 schemas.Base.metadata.create_all(bind=engine)
+
+# Administrador inicial (solo si ADMIN_EMAIL y ADMIN_PASSWORD estan definidos)
+asegurar_admin()
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

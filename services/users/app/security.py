@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import schemas
@@ -57,3 +58,12 @@ def verify_reset_token(token: str):
         return payload.get("sub")
     except jwt.InvalidTokenError:
         return None
+
+# Hashing de contrasenas: lo usan el router y el bootstrap del administrador.
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)

@@ -3,23 +3,30 @@
 Lee /data/analytics.json (montado desde /root/fittrack/analytics/data) y lo
 sirve por secciones. No habla con Spark ni con las bases de datos: el batch ya
 dejo los resultados calculados.
+
+Todas las rutas de datos exigen rol admin; /health queda abierto para monitoreo.
 """
 import json
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+from auth import require_admin
 
 DATA_FILE = Path(os.environ.get("DATA_FILE", "/data/analytics.json"))
 
-app = FastAPI(title="FitTrack - Analytics API", version="1.0.0")
+app = FastAPI(title="FitTrack - Analytics API", version="1.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+# Rutas de datos: todas requieren administrador.
+router = APIRouter(dependencies=[Depends(require_admin)])
 
 _cache = {"mtime": None, "data": None}
 
@@ -49,18 +56,18 @@ def health():
     }
 
 
-@app.get("/dashboard")
+@router.get("/dashboard")
 def dashboard():
     """Todo lo que necesita la pestaña Analitica en una sola peticion."""
     return load_data()
 
 
-@app.get("/kpis")
+@router.get("/kpis")
 def kpis():
     return load_data().get("kpis", {})
 
 
-@app.get("/summary")
+@router.get("/summary")
 def summary():
     data = load_data()
     return {
@@ -70,41 +77,44 @@ def summary():
     }
 
 
-@app.get("/retention")
+@router.get("/retention")
 def retention():
     return load_data().get("retencion", {})
 
 
-@app.get("/adherence")
+@router.get("/adherence")
 def adherence():
     return load_data().get("adherencia", [])
 
 
-@app.get("/goals")
+@router.get("/goals")
 def goals():
     return load_data().get("metas", {})
 
 
-@app.get("/weight")
+@router.get("/weight")
 def weight():
     return load_data().get("peso", {})
 
 
-@app.get("/routines")
+@router.get("/routines")
 def routines():
     return load_data().get("rutinas", {})
 
 
-@app.get("/seasonality")
+@router.get("/seasonality")
 def seasonality():
     return load_data().get("estacionalidad", {})
 
 
-@app.get("/cities")
+@router.get("/cities")
 def cities():
     return load_data().get("ciudades", [])
 
 
-@app.get("/validation")
+@router.get("/validation")
 def validation():
     return load_data().get("validacion", {})
+
+
+app.include_router(router)

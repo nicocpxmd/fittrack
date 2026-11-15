@@ -21,6 +21,10 @@ class UnitsEnum(str, enum.Enum):
     metric = "metric"
     imperial = "imperial"
 
+class RoleEnum(str, enum.Enum):
+    admin = "admin"
+    user = "user"
+
 class User(Base):
     __tablename__ = "users"
 
@@ -33,4 +37,6 @@ class User(Base):
     gender = Column(SQLEnum(GenderEnum, name="gender_enum"), nullable=True)
     fitness_goal = Column(SQLEnum(FitnessGoalEnum, name="fitness_goal_enum"), nullable=True)
     preferred_units = Column(SQLEnum(UnitsEnum, name="units_enum"), default=UnitsEnum.metric, nullable=False)
+    # Rol de acceso: 'user' por defecto, 'admin' habilita la pestaña de analitica.
+    role = Column(String(20), nullable=False, default="user", server_default="user")
     created_at = Column(DateTime(timezone=True), server_default=func.now())

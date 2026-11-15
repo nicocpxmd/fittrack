@@ -20,6 +20,9 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_FULL_NAME: ${ADMIN_FULL_NAME:-Administrador}
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,6 +86,7 @@ services:
     build: ./analytics
     environment:
       DATA_FILE: /data/analytics.json
+      USERS_SERVICE_URL: http://users:8002
     volumes:
       - ./analytics/data:/data:ro
     restart: unless-stopped
