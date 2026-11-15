@@ -130,10 +130,13 @@ Edita `.env`:
 | `POSTGRES_PASSWORD` | contraseña de Postgres |
 | `DB_PASSWORD` | contraseña root de MySQL |
 | `SECRET_KEY` | cadena aleatoria de 64 caracteres hex |
+| `ADMIN_EMAIL` | correo del administrador (es la cuenta que verá la pestaña Analítica) |
+| `ADMIN_PASSWORD` | contraseña de ese administrador |
+| `ADMIN_FULL_NAME` | nombre visible del administrador (opcional) |
 
-> `POSTGRES_PASSWORD` y `DB_PASSWORD` las eliges tú para este proyecto. **No son contraseñas de una
-> cuenta ya existente** (GitHub, Docker Hub, correo, etc.). Deben ser nuevas, distintas entre sí y
-> alfanuméricas.
+> `POSTGRES_PASSWORD`, `DB_PASSWORD` y `ADMIN_PASSWORD` las eliges tú para este proyecto. **No son
+> contraseñas de una cuenta ya existente** (GitHub, Docker Hub, correo, etc.). Deben ser nuevas,
+> distintas entre sí y alfanuméricas.
 
 Generar `SECRET_KEY`:
 
@@ -146,6 +149,19 @@ En PowerShell:
 ```powershell
 -join ((1..64) | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) })
 ```
+
+Generar `ADMIN_PASSWORD`:
+
+```bash
+openssl rand -hex 12
+```
+
+> Si dejas `changeme` en `ADMIN_PASSWORD`, el servicio arranca igual pero **escribe un aviso en el
+> log**: esa contraseña es pública en el repositorio y cualquiera podría entrar como administrador.
+>
+> El administrador **no existe hasta que el servicio arranca** con `ADMIN_EMAIL` y `ADMIN_PASSWORD`
+> definidos. Si más adelante cambias la contraseña en `.env`, la cuenta ya creada **no** se actualiza:
+> usa el flujo de recuperación o cámbiala en la base.
 
 > Usa contraseñas **alfanuméricas**. Caracteres como `@`, `:`, `/`, `?` o `#` pueden romper la
 > `DATABASE_URL` de Postgres.
