@@ -59,7 +59,7 @@ Abrir `http://localhost:8080`, registrarse (cada uno crea su usuario) y comproba
 **Analítica** no aparece: es solo para administradores. Para verla, cierra sesión y entra con
 `ADMIN_EMAIL` / `ADMIN_PASSWORD` del `.env`.
 
-Para el pipeline completo con Spark, seguir la sección 5 del `README.md`.
+Para el pipeline completo con Spark, seguir [`docs/pipeline-spark.md`](pipeline-spark.md).
 
 ## 3. Qué falta
 
