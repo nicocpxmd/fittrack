@@ -79,8 +79,8 @@ Para el pipeline completo con Spark, seguir [`docs/pipeline-spark.md`](pipeline-
 - Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
   (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar
   el stack y revisar con el equipo.
-- Los tags `v3.3`, `v3.4`, `v3.5`, `v3.7` y `v3.8` se conservan por si hay enlaces externos; **no se
-  mueven**. `v3.2` y `v3.6` se eliminaron el 2026-11-11 y sus commits siguen en la rama.
+- Los tags `v3.3`, `v3.4`, `v3.5`, `v3.7`, `v3.8` y `v3.9` se conservan por si hay enlaces externos;
+  **no se mueven**. `v3.2` y `v3.6` se eliminaron el 2026-11-11 y sus commits siguen en la rama.
   `v3.2` y `v3.6` se eliminaron el 2026-11-11 y sus commits siguen en la rama.
 - Mientras tanto, el link seguro para el Excel es:
   `https://github.com/nicocpxmd/fittrack/tree/v4.0-proyecto-final`.
