@@ -2,7 +2,6 @@
 
 [<- Volver al README](../README.md)
 
-
 ```text
 analytics/                 API FastAPI + muestra de analítica
   main.py
@@ -17,8 +16,14 @@ report/                    informe IEEE, figuras y PDF
 slides/                    diapositivas de la sustentación
 docs/
   team-handoff.md          estado y tareas del equipo
+  despliegue-swarm.md      modo clúster en detalle
+  configuracion.md         variables, puertos y roles
+  verificacion.md          pruebas de API, carga, estrés y failover
+  pipeline-spark.md        dataset, ETL, KPIs y validación
+  troubleshooting.md       problemas comunes y su solución
+  estructura.md            este archivo
   api-contracts/           contratos de API
-  legacy/bare-metal/       guía y deploy del montaje sin Docker (histórico)
+  legacy/bare-metal/       guía y despliegue sin Docker (histórico)
 docker-compose.yml         ejecución local en una máquina
 docker-stack.yml           despliegue en Swarm
 .env.example               variables de ejemplo
