@@ -32,6 +32,9 @@ Entrega congelada: tag **`v4.0-proyecto-final`**.
 
 ## Cómo ejecutar
 
+Los comandos son para bash. En Windows PowerShell: `cp` es `Copy-Item` y `mkdir -p` es
+`New-Item -ItemType Directory -Force`.
+
 ### 1. Clonar
 
 ```bash
