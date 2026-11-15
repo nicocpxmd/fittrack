@@ -90,34 +90,47 @@ requisitos no funcionales: reproducibilidad (scripts y README) y operación con 
 
 ## 3. Diseño
 
-### 3.1 Arquitectura de componentes
+### 3.1 Arquitectura lógica
 
-![Arquitectura de componentes](figuras/arquitectura.png)
+![Arquitectura lógica](figuras/arquitectura-logica.png)
 
-**Figura 1.** Componentes y flujo de una petición.
+**Figura 1.** Arquitectura lógica: componentes funcionales y su relación.
 
-La aplicación se compone de:
+La figura describe el sistema en términos funcionales, sin decidir todavía con qué tecnología se
+implementa. Un usuario final registra sus medidas, metas y rutinas en la aplicación de seguimiento, que
+conserva esos datos operativos. De forma independiente, un dataset de análisis entra a un proceso de
+preparación y limpieza, del que salen los indicadores agregados, y esos indicadores se publican en un
+panel que consulta el administrador.
 
-- **Frontend nginx:** sirve el HTML/JS del dashboard. No proxea APIs.
-- **HAProxy:** único entrypoint; enruta `/api/<servicio>/` y balancea entre réplicas.
-- **users:** registro, login JWT y perfil; Postgres.
+La separación es deliberada: la aplicación no calcula indicadores y el análisis no escribe en las bases
+operativas.
+
+### 3.2 Diagrama de componentes
+
+![Diagrama de componentes](figuras/componentes.png)
+
+**Figura 2.** Componentes, interfaces y dependencias entre servicios.
+
+Todos los servicios exponen una API REST y se consumen a través de HAProxy, único entrypoint de
+`/api/<servicio>/`:
+
+- **users:** registro, login con JWT y perfil; Postgres.
 - **measurements:** medidas corporales; Mongo.
 - **progress:** cálculo de progreso entre fechas; Mongo.
 - **workouts:** rutinas; MySQL.
 - **goals:** metas y porcentaje de cumplimiento; MySQL.
-- **analytics:** API de solo lectura que sirve los KPIs calculados por Spark.
+- **analytics:** API de solo lectura que sirve los KPIs calculados por Spark; FastAPI.
 - **postgres, mongo, mysql:** bases de datos con volúmenes `fittrack_*`.
 
-Flujo de una petición: el navegador llama a `http://192.168.100.2:8080/api/...`; HAProxy reescribe
-el prefijo y envía la petición al servicio correspondiente. Los servicios validan el JWT contra
-`users` y filtran los datos por `user_id`. La pestaña de analítica llama a `/api/analytics/dashboard`,
-que devuelve un JSON agregado.
+Cada servicio valida el token contra `users` en lugar de replicar la lógica de autenticación.
+`analytics` hace lo mismo y además exige rol de administrador: es el único componente con respuesta
+restringida, porque sus datos son agregados de todos los usuarios.
 
-### 3.2 Diagrama de despliegue
+### 3.3 Diagrama de despliegue
 
 ![Diagrama de despliegue](figuras/despliegue.png)
 
-**Figura 2.** Despliegue en dos VMs y un clúster Spark.
+**Figura 3.** Despliegue en dos VMs y un clúster Spark.
 
 | Nodo | IP | Rol |
 |---|---|---|
@@ -128,11 +141,11 @@ HAProxy y nginx se fijan al cliente; los servicios con estado y las bases de dat
 servidor para que los volúmenes y bind mounts estén disponibles. La red overlay de Swarm conecta los
 dos nodos.
 
-### 3.3 Pipeline de datos
+### 3.4 Pipeline de datos
 
 ![Pipeline de datos](figuras/pipeline.png)
 
-**Figura 3.** Flujo del dataset al dashboard.
+**Figura 4.** Flujo del dataset al dashboard.
 
 1. **Landing zone:** CSV crudos en `/root/fittrack/dataset/data`.
 2. **ETL:** lectura con esquema explícito, limpieza y escritura de Parquet en
@@ -141,7 +154,7 @@ dos nodos.
 4. **Publicación:** el servicio `analytics` lee el JSON y lo sirve por HTTP.
 5. **Dashboard:** la pestaña “Analítica” consume el JSON y renderiza KPIs y tablas.
 
-### 3.4 Reglas de limpieza
+### 3.5 Reglas de limpieza
 
 El ETL aplica un conjunto fijo de reglas. Cada una responde a una suciedad sembrada a propósito en el
 dataset: identificadores repetidos, fechas en dos formatos, pesos en libras, valores imposibles y
@@ -157,7 +170,7 @@ fuera de rango; los nulos se conservan y las agregaciones los ignoran.
 | Nulos | Conservar nulos de cintura/brazo/pecho; las agregaciones los ignoran. |
 | Metas de peso | Normalizar `valor_inicial` y `valor_objetivo` a kg. |
 
-### 3.5 KPIs y algoritmos
+### 3.6 KPIs y algoritmos
 
 - **Retención:** semanas entre registro y última actividad; porcentaje con actividad a 4, 12 y 26
   semanas, global y por cohorte mensual.
@@ -333,7 +346,7 @@ datos, el servicio no se recupera solo: las bases son instancias únicas en `rol
 
 ![Pestaña Analítica](figuras/dashboard.jpeg)
 
-**Figura 4.** Pestaña “Analítica” con KPIs, retención, metas, peso, estacionalidad y validación.
+**Figura 5.** Pestaña “Analítica” con KPIs, retención, metas, peso, estacionalidad y validación.
 
 ### 5.7 Discusión
 

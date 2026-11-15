@@ -1,0 +1,41 @@
+%% Figura 3 - Diagrama de despliegue.
+%% Nodos, IPs, puertos, volumenes y que corre en cada maquina.
+flowchart LR
+  subgraph Host[Equipo del usuario]
+    NAV[Navegador]
+  end
+
+  subgraph Client["clienteUbuntu 192.168.100.2 - Swarm worker"]
+    NG["nginx :80<br/>frontend estatico"]
+    HA["HAProxy :8080 / :8404<br/>entrypoint y balanceo"]
+  end
+
+  subgraph Server["servidorUbuntu 192.168.100.3 - Swarm manager"]
+    subgraph Services["Servicios sin estado (hasta 3 replicas)"]
+      US["users :8002"]
+      ME["measurements :8001"]
+      PR["progress :8005"]
+      GO["goals :8004"]
+      WO["workouts :8003"]
+      AN["analytics :8006"]
+    end
+    subgraph DBs["Bases de datos con volumen"]
+      PG[("Postgres :5432")]
+      MO[("Mongo :27017")]
+      MY[("MySQL :3306")]
+    end
+    SPK["Spark master :7077<br/>worker local<br/>UI :8081"]
+    JSON[("analytics/data<br/>bind mount :ro")]
+  end
+
+  NAV -->|HTTP| HA
+  HA -->|"/"| NG
+  HA -->|"/api/*"| Services
+  AN -->|"valida token y rol"| US
+  US --> PG
+  ME --> MO
+  PR --> MO
+  WO --> MY
+  GO --> MY
+  AN -->|lee| JSON
+  SPK -->|"ETL + KPIs"| JSON

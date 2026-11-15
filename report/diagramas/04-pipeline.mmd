@@ -1,0 +1,8 @@
+%% Figura 4 - Pipeline de datos: del CSV al dashboard.
+flowchart LR
+  CSV["CSV crudos<br/>8.462.080 filas - 741 MB"] --> ETL["ETL Spark<br/>limpieza y Parquet"]
+  ETL --> PQ["Parquet curado<br/>8.418.175 filas<br/>particionado por anio"]
+  PQ --> KPI["KPIs Spark<br/>retencion, metas, peso"]
+  KPI --> JSON["analytics.json<br/>12 secciones"]
+  JSON --> API["API analytics<br/>FastAPI :8006"]
+  API --> DASH["Panel<br/>pestana Analitica"]

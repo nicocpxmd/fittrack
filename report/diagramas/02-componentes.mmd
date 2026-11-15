@@ -1,0 +1,46 @@
+%% Figura 2 - Diagrama de componentes.
+%% Servicios, interfaces y dependencias. Tecnologia si; ubicacion fisica no.
+flowchart LR
+  NAV[Navegador]
+  LB[HAProxy<br/>puerta de enlace / balanceador]
+  NG[nginx<br/>frontend estatico]
+
+  subgraph MS[Microservicios REST]
+    US[users<br/>autenticacion y perfiles]
+    ME[measurements<br/>medidas corporales]
+    PR[progress<br/>calculo de progreso]
+    GO[goals<br/>metas]
+    WO[workouts<br/>rutinas]
+    AN[analytics<br/>reportes de solo lectura]
+  end
+
+  PG[(Postgres)]
+  MO[(Mongo)]
+  MY[(MySQL)]
+  JSON[(analytics.json)]
+  DS[(dataset CSV)]
+  SPK[Spark<br/>ETL y KPIs]
+
+  NAV --> LB
+  LB -->|/| NG
+  LB -->|/api/users| US
+  LB -->|/api/measurements| ME
+  LB -->|/api/progress| PR
+  LB -->|/api/goals| GO
+  LB -->|/api/workouts| WO
+  LB -->|/api/analytics| AN
+
+  ME -->|valida token| US
+  PR -->|valida token| US
+  GO -->|valida token| US
+  WO -->|valida token| US
+  AN -->|valida token y rol| US
+
+  US --> PG
+  ME --> MO
+  PR --> MO
+  WO --> MY
+  GO --> MY
+  AN -->|lee| JSON
+  DS --> SPK
+  SPK -->|escribe| JSON

@@ -1,0 +1,37 @@
+%% Figura 1 - Arquitectura logica.
+%% Componentes funcionales y su relacion. Sin tecnologias, sin IPs, sin puertos.
+flowchart TB
+  U([Usuario final])
+  A([Administrador])
+
+  subgraph APP[Aplicacion de seguimiento]
+    REG[Registro y acceso]
+    MED[Registro de medidas]
+    META[Metas y progreso]
+    RUT[Rutinas de entrenamiento]
+  end
+
+  subgraph ANL[Analisis de datos]
+    PREP[Preparacion y limpieza]
+    IND[Calculo de indicadores]
+    REP[Publicacion de reportes]
+  end
+
+  OP[(Datos operativos)]
+  DS[(Dataset de analisis)]
+  PANEL[Panel de visualizacion]
+
+  U --> REG
+  U --> MED
+  U --> META
+  U --> RUT
+  REG --> OP
+  MED --> OP
+  META --> OP
+  RUT --> OP
+
+  DS --> PREP
+  PREP --> IND
+  IND --> REP
+  REP --> PANEL
+  A -->|consulta| PANEL
