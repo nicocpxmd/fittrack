@@ -368,12 +368,12 @@ El stack usa las imágenes publicadas `nicocpxm/fittrack-*`. Si no tienes acceso
 construye y publica en **tu** namespace y actualiza los `image:` del stack:
 
 ```bash
-docker build -t <tu-usuario>/fittrack-nginx:v4 ./frontend
+docker build -t <tu-usuario>/fittrack-nginx:v5 ./frontend
 docker build -t <tu-usuario>/fittrack-haproxy:v2 ./haproxy
-docker build -t <tu-usuario>/fittrack-analytics:v1 ./analytics
-docker push <tu-usuario>/fittrack-nginx:v4
+docker build -t <tu-usuario>/fittrack-analytics:v2 ./analytics
+docker push <tu-usuario>/fittrack-nginx:v5
 docker push <tu-usuario>/fittrack-haproxy:v2
-docker push <tu-usuario>/fittrack-analytics:v1
+docker push <tu-usuario>/fittrack-analytics:v2
 ```
 
 Los servicios `users`, `measurements`, `progress`, `workouts` y `goals` también tienen imágenes

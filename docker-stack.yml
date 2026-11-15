@@ -27,7 +27,7 @@ x-servicio: &servicio
 
 services:
   nginx:
-    image: nicocpxm/fittrack-nginx:v4
+    image: nicocpxm/fittrack-nginx:v5
     deploy:
       replicas: 1
       restart_policy:
@@ -52,7 +52,7 @@ services:
           - node.labels.role == worker
 
   users:
-    image: nicocpxm/fittrack-users:v2
+    image: nicocpxm/fittrack-users:v3
     environment:
       DATABASE_URL: postgresql+psycopg://fittrack:${POSTGRES_PASSWORD}@postgres:5432/fittrack_users
       SECRET_KEY: ${SECRET_KEY}
@@ -112,7 +112,7 @@ services:
     deploy: *servicio
 
   analytics:
-    image: nicocpxm/fittrack-analytics:v1
+    image: nicocpxm/fittrack-analytics:v2
     environment:
       DATA_FILE: /data/analytics.json
       USERS_SERVICE_URL: http://users:8002
