@@ -14,7 +14,8 @@ pipeline de análisis de datos con Apache Spark que alimenta un dashboard. La ap
 en seis servicios y tres bases de datos, con HAProxy como punto de entrada y balanceo. El pipeline
 procesa un dataset sintético de 100.000 usuarios y 8,4 millones de filas, aplica limpieza de
 duplicados, fechas y unidades, y calcula KPIs de retención, adherencia, metas y evolución de peso.
-Los resultados se publican por una API y se muestran en una pestaña “Analítica”. Las pruebas de carga
+Los resultados se publican por una API y se muestran en una pestaña “Analítica”, con acceso restringido a
+usuarios con rol de administrador. Las pruebas de carga
 muestran una mejora de 1,89× en RPS al pasar de una a tres réplicas, y la validación contra los
 patrones sembrados confirma que el análisis recupera las señales del dataset. En la prueba de
 failover, matar una de tres réplicas mantuvo el servicio en 99,70 % de éxito y recuperó la tarea en
@@ -87,6 +88,11 @@ Los requisitos se derivaron del enunciado: despliegue en clúster, escalabilidad
 de desempeño, dataset de gran escala, pipeline de análisis, reportes y dashboard. Se añadieron dos
 requisitos no funcionales: reproducibilidad (scripts y README) y operación con recursos limitados
 (dos VMs, 3,8 GiB en el servidor).
+
+Durante la revisión de avances se sumó un requisito funcional: los indicadores agregados solo puede
+consultarlos un usuario con rol de administrador. Un usuario registrado normalmente usa la aplicación
+—sus medidas, metas, progreso y rutinas— pero no accede a la analítica, que resume información de todos
+los usuarios.
 
 ## 3. Diseño
 
@@ -213,7 +219,21 @@ lo cachea por `mtime`; si Spark vuelve a escribir, la API sirve la versión nuev
 El frontend añadió la pestaña “Analítica”, con tarjetas de KPIs, tablas y barras CSS. HAProxy añadió
 el backend `/api/analytics/*` hacia `analytics:8006`.
 
-### 4.3 Reproducibilidad
+### 4.3 Acceso restringido por rol
+
+La tabla `users` incorporó una columna `role` (`admin` o `user`, por defecto `user`) y el registro
+público siempre crea usuarios normales: el rol nunca se acepta desde el cliente. El primer
+administrador se define por configuración: al arrancar, el servicio crea o promueve la cuenta indicada
+en `ADMIN_EMAIL` y `ADMIN_PASSWORD`, de forma idempotente y sin sobrescribir una contraseña existente.
+
+La restricción no vive en el frontend. El servicio `analytics` valida el token contra `users` en cada
+petición y exige `role = admin`, siguiendo el mismo patrón que usan los demás servicios; los datos solo
+se sirven a un administrador y `/health` queda abierto para monitoreo. La interfaz oculta la pestaña
+cuando el rol no es de administrador, pero se trata de una comodidad: una petición directa a la API sin
+rol recibe `403`. Las bases creadas antes de este cambio se actualizan con una migración
+`ALTER TABLE` documentada en el repositorio.
+
+### 4.4 Reproducibilidad
 
 El repositorio incluye:
 
@@ -233,7 +253,20 @@ Se probó el flujo completo contra `http://192.168.100.2:8080`:
 - creación y listado de medidas (Mongo),
 - creación y listado de rutinas y metas (MySQL),
 - cálculo de progreso (Mongo + llamada a measurements),
-- `GET /api/analytics/health`, `/kpis`, `/dashboard` y todas las secciones (200).
+- `/health`, `/kpis`, `/dashboard` y todas las secciones de analítica con un token de administrador
+  (200).
+
+El control de acceso se verificó con esta matriz. Sin token la API responde 401; con el token de un
+usuario normal, 403; solo un administrador obtiene los datos. En la interfaz, la pestaña *Analítica* no
+aparece para un usuario normal, pero la prueba que importa es la de la API: la restricción se aplica en
+el servidor, no en el navegador.
+
+| Recurso | Token | Código |
+|---|---|---|
+| `/health` | sin token | 200 |
+| `/dashboard` | sin token | 401 |
+| `/dashboard` | usuario normal | 403 |
+| `/dashboard` | administrador | 200 |
 
 ### 5.2 Limpieza
 
@@ -357,7 +390,8 @@ datos, el servicio no se recupera solo: las bases son instancias únicas en `rol
   distribución multi-nodo está probada, pero el throughput no mejora por la red overlay y el worker
   de 2 cores; el servidor compite con el stack.
 - **Riesgos:** memoria y swap al correr Spark con el stack; tareas huérfanas de intentos anteriores;
-  la rama `main` del repo no refleja la versión Docker.
+  la rama `main` del repo no refleja la versión Docker; la contraseña del administrador vive en el
+  archivo de entorno, aceptable en el laboratorio pero no en producción.
 
 ## 6. Conclusiones y trabajo futuro
 
@@ -368,7 +402,8 @@ escalado a tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 e
 distribución entre los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a
 53–54 RPS por la red overlay y el worker de 2 cores. El estrés marcó una meseta de ~60 RPS y timeouts
 desde 100 conexiones. En el failover, matar una de tres tareas dejó el servicio en 99,70 % de éxito,
-con el p95 intacto y recuperación en 8 segundos.
+con el p95 intacto y recuperación en 8 segundos. El acceso a la analítica quedó restringido a
+administradores, con la validación en el servicio y no solo en la interfaz.
 
 Trabajo futuro:
 

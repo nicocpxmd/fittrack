@@ -15,6 +15,7 @@
 | Microservicios en Docker Swarm | ✅ Desplegado | 7 backends de HAProxy en `UP` |
 | Balanceo y escalado | ✅ Probado | 38,15 → 72,05 RPS en un nodo; 53–54 RPS multi-nodo, 0 errores |
 | Failover de tarea | ✅ Probado | 99,70 % de éxito al matar 1 de 3 réplicas; recuperación en 8 s |
+| Acceso a la analítica | ✅ Restringido | 401 sin token, 403 con usuario, 200 con administrador |
 | Dataset sintético | ✅ 100k usuarios / 8,4 M filas | Validador 24/24 |
 | ETL + KPIs con Spark | ✅ Ejecutado | `analytics/data/analytics.json` |
 | API de analítica | ✅ Funcionando | `/api/analytics/*` |
@@ -54,7 +55,9 @@ Copy-Item analytics/sample/analytics.json analytics/data/analytics.json
 docker compose up -d --build
 ```
 
-Abrir `http://localhost:8080`, registrarse (cada uno crea su usuario) y entrar a **Analítica**.
+Abrir `http://localhost:8080`, registrarse (cada uno crea su usuario) y comprobar que la pestaña
+**Analítica** no aparece: es solo para administradores. Para verla, cierra sesión y entra con
+`ADMIN_EMAIL` / `ADMIN_PASSWORD` del `.env`.
 
 Para el pipeline completo con Spark, seguir la sección 5 del `README.md`.
 

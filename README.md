@@ -36,13 +36,13 @@ El proyecto se puede ejecutar de dos formas:
 
 | Componente | Función |
 |---|---|
-| `services/users` | Registro, login JWT y perfil (Postgres) |
+| `services/users` | Registro, login JWT, perfil y rol (`admin`/`user`) sobre Postgres |
 | `services/measurements` | Medidas corporales (Mongo) |
 | `services/progress` | Cálculo de progreso entre fechas (Mongo) |
 | `services/workouts` | Rutinas de entrenamiento (MySQL) |
 | `services/goals` | Metas y porcentaje de cumplimiento (MySQL) |
-| `analytics/` | API de solo lectura que publica los KPIs de Spark |
-| `frontend/` | Dashboard HTML/JS con la pestaña **Analítica** |
+| `analytics/` | API de solo lectura que publica los KPIs de Spark; exige rol de administrador |
+| `frontend/` | Dashboard HTML/JS con la pestaña **Analítica**, visible solo para administradores |
 | `haproxy/` | Entrada única y balanceo de `/api/*` |
 | `spark/` | ETL, KPIs y scripts de ejecución |
 | `dataset/` | Generador, validador y diccionario del dataset sintético |
@@ -206,6 +206,10 @@ que `users`, `measurements`, `progress`, `workouts`, `goals`, `analytics` y `hap
 
 Registra un usuario desde la pantalla de **Crear cuenta**. No hay una cuenta de prueba publicada:
 cada persona crea la suya.
+
+La pestaña **Analítica** solo aparece si inicias sesión con el administrador que definiste en `.env`
+(`ADMIN_EMAIL` y `ADMIN_PASSWORD`). Un usuario normal ve Medidas, Progreso, Metas y Rutinas, pero no
+los indicadores agregados.
 
 ### 4.6 Detener
 
@@ -389,6 +393,10 @@ docker stack services fittrack
 Espera a que todos los servicios estén `1/1`. El entrypoint es `http://<worker-ip>:8080`; las stats
 de HAProxy, `http://<worker-ip>:8404` (admin / admin).
 
+> `ADMIN_EMAIL` y `ADMIN_PASSWORD` tienen que estar en el `.env` **antes** de desplegar: el servicio de
+> usuarios los lee al arrancar para crear el administrador. Si el stack ya existía con una base
+> anterior, aplica primero la migración de la sección 7.4.
+
 ### 6.6 Escalar
 
 El stack ya declara **3 réplicas** para `users` y `measurements`, que es la topología de las pruebas
@@ -428,6 +436,9 @@ placeholders para que funcione en cualquier entorno; si usas el laboratorio, ree
 | `POSTGRES_PASSWORD` | contraseña de Postgres (users) |
 | `DB_PASSWORD` | contraseña root de MySQL (workouts, goals) |
 | `SECRET_KEY` | firma de los JWT |
+| `ADMIN_EMAIL` | correo del administrador que verá la analítica |
+| `ADMIN_PASSWORD` | contraseña de ese administrador |
+| `ADMIN_FULL_NAME` | nombre visible del administrador (opcional) |
 | `FITTRACK_DIR` | ruta del repo en el nodo server (solo Swarm) |
 
 `.env` no se versiona. `.env.example` tiene valores de ejemplo.
@@ -454,6 +465,44 @@ placeholders para que funcione en cualquier entorno; si usas el laboratorio, ree
 
 Los scripts `spark/run_*.sh` detectan la raíz del repo automáticamente y aceptan estas variables.
 
+### 7.4 Roles y acceso
+
+Hay dos roles: `user` y `admin`. El registro público siempre crea `user`; el rol nunca se acepta desde
+el cliente.
+
+El administrador se define por configuración y se crea (o se promueve) al arrancar el servicio:
+
+```bash
+ADMIN_EMAIL=admin@tudominio.com
+ADMIN_PASSWORD=<una contraseña nueva>
+```
+
+- Si el correo no existe, se crea con rol `admin` y esa contraseña.
+- Si ya existe como `user`, se promueve a `admin` **sin cambiarle la contraseña**.
+- Si no defines las variables, no se crea ningún administrador.
+
+Cambiar `ADMIN_PASSWORD` después **no** actualiza una cuenta ya creada: usa el flujo de recuperación o
+cámbiala en la base.
+
+**Bases creadas antes de existir el rol.** `create_all` no agrega columnas a una tabla existente.
+Aplica la migración (es idempotente):
+
+```bash
+# Compose
+docker compose exec -T postgres psql -U fittrack -d fittrack_users \
+  < docker/migrations/001_add_role.sql
+
+# Swarm
+docker exec -i $(docker ps -qf name=fittrack_postgres) psql -U fittrack -d fittrack_users \
+  < docker/migrations/001_add_role.sql
+```
+
+Después reinicia el servicio `users` para que el administrador quede promovido.
+
+**Qué protege.** El servicio `analytics` valida el token contra `users` y exige `role = admin` en todas
+las rutas menos `/health`. Ocultar la pestaña en el frontend es solo comodidad: una petición directa
+sin rol recibe `403`.
+
 ## 8. Verificación
 
 ### 8.1 Contenedores
@@ -467,13 +516,28 @@ docker stack services fittrack
 ### 8.2 API y dashboard
 
 ```bash
+# público
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/
 curl -s http://localhost:8080/api/analytics/health
-curl -s http://localhost:8080/api/analytics/kpis
+
+# la analítica exige administrador
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/analytics/kpis   # 401
+
+TOKEN=$(curl -s -X POST http://localhost:8080/api/users/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@tudominio.com","password":"<tu ADMIN_PASSWORD>"}' \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/analytics/kpis   # 200
+
 curl -s -o /dev/null -w "%{http_code}\n" -u admin:admin http://localhost:8404/
 ```
 
-Esperado: `200`, un JSON con `"status":"ok"` y los KPIs, y `200` en las stats.
+Esperado: `200` en el frontend, `"status":"ok"` en `/health`, `401` sin token, `200` con el token de
+administrador y `200` en las stats.
+
+En PowerShell, `python` puede no existir; usa `python3` o reemplaza la extracción por
+`ConvertFrom-Json`.
 
 > En Swarm, reemplaza `localhost` por `<worker-ip>` en estos comandos.
 
@@ -608,7 +672,50 @@ awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/{print $1, "len=" length($2)}' .env
 
 ### `analytics` responde 503
 
-Falta `analytics/data/analytics.json`. Copia la muestra de la sección 4.3 o corre Spark (sección 5).
+Dos causas posibles:
+
+1. **Falta `analytics/data/analytics.json`.** Copia la muestra de la sección 4.3 o corre Spark
+   (sección 5).
+2. **`analytics` no puede validar el token porque `users` no responde.** Revisa
+   `docker compose ps users` y que `USERS_SERVICE_URL` apunte al servicio correcto
+   (`http://users:8002` en Compose y en Swarm).
+
+### La analítica responde 401 o 403
+
+- **401**: no enviaste token o expiró (dura 60 minutos). Vuelve a iniciar sesión.
+- **403**: el token es válido pero el usuario no tiene rol `admin`. Entra con `ADMIN_EMAIL` o revisa la
+  columna `role` en la tabla `users`.
+
+```bash
+docker compose exec -T postgres psql -U fittrack -d fittrack_users \
+  -c "SELECT email, role FROM users ORDER BY role;"
+```
+
+### No se creó el administrador
+
+El servicio solo lo crea si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidos **al arrancar**. Revisa el
+log:
+
+```bash
+docker compose logs users | grep bootstrap
+```
+
+Si dice `no se crea administrador`, faltan las variables en el `.env` del proyecto o no se exportaron
+antes de `docker stack deploy`. Agrégalas y reinicia el servicio; la operación es idempotente.
+
+### `bad interpreter: /bin/bash^M`
+
+Un script `.sh` se guardó con finales de línea Windows: el `#!/bin/bash` viaja con un `\r` y Linux lo
+interpreta como un intérprete llamado `bash\r`. Pasa con `docker/mysql-init.sh`, que entonces no crea
+los esquemas de `goals` y `workouts`.
+
+```bash
+file docker/mysql-init.sh        # debe decir "ASCII text", no "with CRLF line terminators"
+sed -i 's/\r$//' docker/mysql-init.sh
+```
+
+El repositorio tiene `*.sh text eol=lf` en `.gitattributes`, así que un clon nuevo sale bien; el
+problema aparece si editas el archivo en Windows.
 
 ### Las bases no arrancan o los esquemas no están
 
@@ -725,9 +832,13 @@ Directorios generados e ignorados por Git:
 Una persona con Docker debe poder:
 
 1. Clonar el repo en una carpeta limpia.
-2. Crear `.env`, copiar la muestra de analítica y ejecutar `docker compose up -d --build`.
-3. Abrir `http://localhost:8080`, registrarse y ver la pestaña **Analítica**.
-4. Opcional: generar un dataset pequeño y correr Spark en modo local.
-5. Si algo falla, encontrar la causa en este README o en el troubleshooting.
+2. Crear `.env` (incluidas `ADMIN_EMAIL` y `ADMIN_PASSWORD`), copiar la muestra de analítica y ejecutar
+   `docker compose up -d --build`.
+3. Abrir `http://localhost:8080`, registrarse y comprobar que la pestaña **Analítica** *no* aparece.
+4. Cerrar sesión, entrar con el administrador del `.env` y ver la pestaña **Analítica** con los KPIs.
+5. Comprobar por API que sin rol no hay datos:
+   `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/analytics/kpis` → `401`.
+6. Opcional: generar un dataset pequeño y correr Spark en modo local.
+7. Si algo falla, encontrar la causa en este README o en el troubleshooting.
 
 Si un paso no se cumple, el README debe corregirse antes de la entrega.

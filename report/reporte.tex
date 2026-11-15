@@ -40,8 +40,9 @@ pipeline de análisis de datos con Apache Spark que alimenta un dashboard. La ap
 en seis servicios y tres bases de datos, con HAProxy como punto de entrada y balanceo. El pipeline
 procesa un dataset sintético de 100.000 usuarios y 8,4 millones de filas, aplica limpieza de
 duplicados, fechas y unidades, y calcula KPIs de retención, adherencia, metas y evolución de peso.
-Los resultados se publican por una API y se muestran en una pestaña ``Analítica''. Las pruebas de
-carga muestran una mejora de 1,89$\times$ en RPS al pasar de una a tres réplicas, y la validación
+Los resultados se publican por una API y se muestran en una pestaña ``Analítica'', con acceso restringido
+a usuarios con rol de administrador. Las pruebas de carga muestran una mejora de 1,89$\times$ en RPS al
+pasar de una a tres réplicas, y la validación
 contra los patrones sembrados confirma que el análisis recupera las señales del dataset. En la prueba
 de failover, matar una de tres réplicas mantuvo el servicio en 99,70\,\% de éxito y recuperó la tarea
 en 8 segundos. El trabajo documenta las decisiones, los problemas encontrados y una guía reproducible.
@@ -64,7 +65,8 @@ dashboard. Los objetivos específicos son: (1) empaquetar los microservicios y s
 imágenes reproducibles; (2) desplegar el stack en Docker Swarm \cite{docker} con HAProxy; (3)
 diseñar y ejecutar un ETL con Spark \cite{spark} sobre un dataset de gran escala; (4) calcular KPIs de
 interés y validarlos contra patrones conocidos; (5) publicar los resultados por una API y mostrarlos
-en el dashboard; y (6) medir funcionamiento, escalabilidad y desempeño, documentando la reproducción.
+en el dashboard, con acceso restringido a administradores; y (6) medir funcionamiento, escalabilidad y
+desempeño, documentando la reproducción.
 
 La contribución principal es una solución completa y reproducible que separa la aplicación
 transaccional (microservicios y bases de datos) del procesamiento analítico (Spark y archivos
@@ -122,6 +124,11 @@ Los requisitos se derivaron del enunciado: despliegue en clúster, escalabilidad
 de desempeño, dataset de gran escala, pipeline de análisis, reportes y dashboard. Se añadieron dos
 requisitos no funcionales: reproducibilidad (scripts y README) y operación con recursos limitados
 (dos VMs, 3,8 GiB en el servidor).
+
+Durante la revisión de avances se sumó un requisito funcional: los indicadores agregados solo puede
+consultarlos un usuario con rol de administrador. Un usuario registrado normalmente usa la aplicación
+—sus medidas, metas, progreso y rutinas— pero no accede a la analítica, que resume información de todos
+los usuarios.
 
 \section{Diseño}
 \subsection{Arquitectura lógica}
@@ -289,6 +296,20 @@ la versión nueva sin reiniciar.
 El frontend añadió la pestaña ``Analítica'', con tarjetas de KPIs, tablas y barras CSS. HAProxy añadió
 el backend \path{/api/analytics/*} hacia \texttt{analytics:8006}.
 
+\subsection{Acceso restringido por rol}
+La tabla \texttt{users} incorporó una columna \texttt{role} (\texttt{admin} o \texttt{user}, por
+defecto \texttt{user}) y el registro público siempre crea usuarios normales: el rol nunca se acepta
+desde el cliente. El primer administrador se define por configuración: al arrancar, el servicio crea o
+promueve la cuenta indicada en \texttt{ADMIN\_EMAIL} y \texttt{ADMIN\_PASSWORD}, de forma idempotente y
+sin sobrescribir una contraseña existente.
+
+La restricción no vive en el frontend. El servicio \texttt{analytics} valida el token contra
+\texttt{users} en cada petición y exige \texttt{role = admin}, siguiendo el mismo patrón que usan los
+demás servicios; los datos solo se sirven a un administrador y \texttt{/health} queda abierto para
+monitoreo. La interfaz oculta la pestaña cuando el rol no es de administrador, pero se trata de una
+comodidad: una petición directa a la API sin rol recibe \texttt{403}. Las bases creadas antes de este
+cambio se actualizan con una migración \texttt{ALTER TABLE} documentada en el repositorio.
+
 \subsection{Reproducibilidad}
 El repositorio del proyecto \cite{fittrack} incluye \texttt{README.md} con el paso a paso (stack,
 dataset, Spark, imágenes y pruebas), \texttt{spark/run\_all.sh} y scripts individuales con memoria
@@ -300,9 +321,31 @@ configurable,
 \subsection{Pruebas funcionales}
 Se probó el flujo completo contra \texttt{http://192.168.100.2:8080}: registro, login y
 \texttt{/me} (Postgres); creación y listado de medidas (Mongo); creación y listado de rutinas y
-metas (MySQL); cálculo de progreso (Mongo + llamada a measurements); y
-\texttt{GET /api/analytics/health}, \texttt{/kpis}, \texttt{/dashboard} y todas las secciones
+metas (MySQL); cálculo de progreso (Mongo + llamada a measurements); y \texttt{/health},
+\texttt{/kpis}, \texttt{/dashboard} y todas las secciones de analítica con un token de administrador
 (HTTP 200).
+
+El control de acceso se verificó con la matriz del Cuadro~\ref{tab:auth}. Sin token la API responde
+401; con el token de un usuario normal, 403; solo un administrador obtiene los datos. En la interfaz,
+la pestaña \emph{Analítica} no aparece para un usuario normal, pero la prueba que importa es la de la
+API: la restricción se aplica en el servidor, no en el navegador.
+
+\begin{table}[t]
+\centering
+\caption{Pruebas de autorización sobre \texttt{/api/analytics/*}.}
+\label{tab:auth}
+\small
+\begin{tabularx}{\columnwidth}{@{}Y l r@{}}
+\toprule
+Recurso & Token & Código \\
+\midrule
+\texttt{/health} & sin token & 200 \\
+\texttt{/dashboard} & sin token & 401 \\
+\texttt{/dashboard} & usuario normal & 403 \\
+\texttt{/dashboard} & administrador & 200 \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection{Limpieza}
 De las 8.462.080 filas crudas quedaron 8.418.175 curadas, un descarte neto de 43.905 filas
@@ -487,7 +530,8 @@ distribución multi-nodo está probada, pero el throughput no mejora por la red 
 2 cores; el servidor compite con el stack.
 \textbf{Riesgos}: memoria y
 swap al correr Spark con el stack; tareas huérfanas de intentos anteriores; la rama \texttt{main}
-del repo no refleja la versión Docker.
+del repo no refleja la versión Docker; la contraseña del administrador vive en el archivo de entorno,
+que es aceptable en el laboratorio pero debería pasar a un gestor de secretos en producción.
 
 \section{Conclusiones y trabajo futuro}
 Se desplegó FitTrack en Docker Swarm con balanceo, se construyó un pipeline de Spark para 8,4 M de
@@ -497,7 +541,8 @@ escalado a tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 e
 distribución entre los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a
 53--54 RPS por la red overlay y el worker de 2 cores. El estrés marcó una meseta de $\approx$60 RPS y
 timeouts desde 100 conexiones. En el failover, matar una de tres tareas dejó el servicio en
-99,70\,\% de éxito, con el p95 intacto y recuperación en 8 segundos.
+99,70\,\% de éxito, con el p95 intacto y recuperación en 8 segundos. El acceso a la analítica quedó
+restringido a administradores, con la validación en el servicio y no solo en la interfaz.
 
 Trabajo futuro: (1) Spark de dos nodos con un filesystem compartido (NFS) o HDFS para que el Parquet
 no quede repartido entre nodos y medir 1 vs 2 workers; (2) replicar las bases de datos
