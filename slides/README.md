@@ -1,28 +1,42 @@
-# Diapositivas — cómo cerrarlas
+# Diapositivas — sustentación del 2026-11-20
 
-`slides.md` tiene 15 diapositivas con notas y un reparto sugerido para 5 personas (15 minutos).
+`slides.md` es un deck **Marp**: 17 diapositivas con notas del presentador y marcas de tiempo.
+Cada bloque dura 3 minutos y el video ocupa 2:20.
 
-## Convertir a PowerPoint o Google Slides
+## Exportar
 
-- **Google Slides:** crear una presentación en blanco y copiar cada bloque de `slides.md` en una
-  diapositiva. Las tablas se pueden pegar como tablas.
-- **PowerPoint:** usar “Nueva diapositiva → Título y contenido” y pegar los bullets; las tablas de
-  las diapositivas 7, 9 y 10 se pegan como tabla.
-- **Alternativa:** usar la plantilla institucional y mantener el mismo orden.
+Los archivos `fittrack.pdf` y `fittrack.pptx` están versionados, así que no hace falta exportar para
+presentar. Solo si cambia el `.md`:
+
+```bash
+npx -y @marp-team/marp-cli slides/slides.md --allow-local-files -o slides/fittrack.pptx
+npx -y @marp-team/marp-cli slides/slides.md --allow-local-files -o slides/fittrack.pdf
+```
+
+El `.pptx` conserva las notas del presentador, útiles en la vista de orador de PowerPoint.
+
+## Estructura
+
+| Bloque | Diapositivas | Tema | Tiempo |
+|---|---|---|---|
+| 1 | 1–3 | Contexto, requerimientos y dataset | 3:00 |
+| 2 | 4–7 | Arquitectura, componentes, despliegue y Swarm | 3:00 |
+| 3 | 8–10 | Carga, estrés y failover | 3:00 |
+| 4 | 11–13 | Acceso por rol, pipeline y KPIs | 3:00 |
+| — | 14 | Video de demostración | 2:20 |
+| 5 | 15–17 | Conclusiones, límites y cierre | 3:00 |
+
+Total: 17:20, dentro del máximo de 18 minutos.
+
+## Notas del presentador
+
+En Marp las notas son los comentarios `<!-- ... -->`. No se ven en la presentación, se exportan al
+`.pptx` y contienen el guion y el minuto exacto de cada diapositiva.
 
 ## Reglas para la sustentación
 
-1. **No leer.** Cada persona explica su bloque con la diapositiva como guion.
-2. **Demo preparada.** Dejar la sesión iniciada y la pestaña Analítica abierta antes de empezar; si
-   falla la red, usar la captura.
-3. **Tiempo.** Ensayar con cronómetro; el bloque de cada persona debe caber en los minutos asignados.
-4. **Preguntas.** Las respuestas están al final de `slides.md`; revisarlas antes del ensayo.
-5. **Evidencia.** Tener a mano `report/figuras/dashboard.jpeg` y las tablas de resultados.
-
-## Orden de la demo (2 minutos)
-
-1. Abrir `http://192.168.100.2:8080`.
-2. Iniciar sesión con la cuenta de prueba.
-3. Ir a **Analítica**.
-4. Señalar: KPIs, retención, metas, peso y validación.
-5. Volver a **Medidas** para mostrar que la app transaccional sigue funcionando.
+1. **No leer.** Cada persona usa la diapositiva y las notas como guion, no como texto.
+2. **Cronómetro.** El ensayo debe cerrar en 17:30, no en 20.
+3. **Contingencia.** Si el laboratorio no responde, el video y la captura del dashboard cubren la demo.
+4. **Preguntas.** El reparto y las preguntas probables de cada bloque están en
+   `docs/practicas/reparto-sustentacion-2026-11-20.md` del repo de infraestructura.
