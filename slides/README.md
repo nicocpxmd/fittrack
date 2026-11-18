@@ -6,15 +6,20 @@ lleva notas del presentador con su marca de tiempo.
 
 ## Exportar
 
-Los archivos `fittrack.pdf` y `fittrack.pptx` están versionados, así que no hace falta exportar para
-presentar. Solo si cambia el `.md`:
+El PDF está versionado: es el formato de presentación y no necesita exportarse. Solo si cambia el `.md`:
 
 ```bash
-npx -y @marp-team/marp-cli slides/slides.md --allow-local-files -o slides/fittrack.pptx
 npx -y @marp-team/marp-cli slides/slides.md --allow-local-files -o slides/fittrack.pdf
 ```
 
-El `.pptx` conserva las notas del presentador, útiles en la vista de orador de PowerPoint.
+Si alguna vez hace falta la vista de orador, se puede generar un `.pptx` aparte (no se versiona):
+
+```bash
+npx -y @marp-team/marp-cli slides/slides.md --allow-local-files -o slides/fittrack.pptx
+```
+
+Ojo: ese `.pptx` lleva las diapositivas como imágenes y conserva las notas, pero **no es editable** en
+PowerPoint. Los cambios se hacen siempre en `slides.md` y se vuelve a exportar.
 
 ## Estructura y reparto
 

@@ -23,7 +23,12 @@ FASES: Introducción y Análisis
 # FitTrack
 ## Microservicios, Spark y analítica sobre 8,4 millones de filas
 
-**Curso de Redes e Infraestructura**
+**Equipo 1**
+
+<span class="small">Juan Camilo Serrano · Lucio Matías Melendez Rojas · Juan David Ocampo Gutierrez<br>
+Nicolás Castro Pacheco · Diego Fernando Asprilla Palacios</span>
+
+Curso de Redes e Infraestructura
 Universidad Autónoma de Occidente — 20 de noviembre de 2026
 
 <!--
@@ -108,10 +113,9 @@ FASE: Diseño
 
 ## Arquitectura: dos planos separados
 
-![w:1020](../report/figuras/arquitectura-logica.png)
+![h:455](../report/figuras/arquitectura-logica.png)
 
-El usuario usa la aplicación; el administrador consulta los indicadores.
-El análisis **no escribe** en las bases operativas y la aplicación **no calcula** indicadores.
+<span class="small">La aplicación opera; el análisis responde por lotes. Ninguno escribe en el plano del otro.</span>
 
 <!--
 3:00 - 3:50
@@ -127,9 +131,9 @@ que solo ve el administrador. Cada plano puede fallar sin tumbar al otro.
 
 ## Componentes: servicios, interfaces y dependencias
 
-![w:960](../report/figuras/componentes.png)
+![h:455](../report/figuras/componentes.png)
 
-<span class="small">Cada servicio valida el token contra `users`; solo `analytics` exige rol de administrador.</span>
+<span class="small">Cada servicio valida el token contra el servicio de usuarios; solo la analítica exige rol de administrador.</span>
 
 <!--
 3:50 - 4:35
@@ -144,7 +148,7 @@ la autenticación no se repite en cinco servicios.
 
 ## Despliegue: dos VMs y un clúster Spark
 
-![w:1060](../report/figuras/despliegue.png)
+![h:450](../report/figuras/despliegue.png)
 
 <span class="small">nginx y HAProxy en el cliente; servicios y bases en el servidor; Spark trabaja por lotes.</span>
 
