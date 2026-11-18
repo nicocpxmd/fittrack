@@ -51,9 +51,8 @@ FASES: Introducción y Análisis
 # FitTrack
 ## Microservicios, Spark y analítica sobre 8,4 millones de filas
 
-**Equipo 1**
-
-<span class="equipo">Juan Camilo Serrano · Lucio Matías Melendez Rojas · Juan David Ocampo Gutierrez · Nicolás Castro Pacheco · Diego Fernando Asprilla Palacios</span>
+Juan Camilo Serrano · Lucio Matías Melendez Rojas · Juan David Ocampo Gutierrez<br>
+Nicolás Castro Pacheco · Diego Fernando Asprilla Palacios
 
 Curso de Redes e Infraestructura
 Universidad Autónoma de Occidente — 20 de noviembre de 2026
