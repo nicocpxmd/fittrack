@@ -5,7 +5,15 @@ size: 16:9
 ---
 
 <style>
-section { font-size: 25px; }
+section {
+  font-size: 25px;
+  justify-content: flex-start;
+  align-content: start;
+  padding: 62px 72px 56px 72px;
+}
+
+/* La portada se queda centrada; el resto arranca arriba para alinear los títulos. */
+section.portada { justify-content: center; align-content: center; }
 h1 { color: #1f3b57; font-size: 45px; }
 h2 { color: #1f3b57; font-size: 36px; margin-bottom: 0.3em; }
 table { font-size: 0.78em; }
@@ -19,13 +27,15 @@ strong { color: #1f3b57; }
 section::before {
   content: "";
   position: absolute;
-  top: 30px;
-  right: 42px;
-  width: 168px;
-  height: 30px;
+  top: 24px;
+  right: 40px;
+  width: 252px;
+  height: 45px;
   background: url("img/logo-uao.png") no-repeat center / contain;
 }
 </style>
+
+<!-- _class: portada -->
 
 <!--
 BLOQUE 1 · Juan Camilo · 0:00 - 3:00
@@ -358,7 +368,9 @@ se pueden contrastar contra la realidad sembrada.
 VIDEO · abre Nicolás (12:00 - 12:15) y cierra Lucio (14:05 - 14:20)
 -->
 
-## Demostración
+<span class="fase">Demostración</span>
+
+## La aplicación en funcionamiento
 
 <div class="center">
 
