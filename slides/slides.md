@@ -11,11 +11,13 @@ h2 { color: #1f3b57; font-size: 36px; margin-bottom: 0.3em; }
 table { font-size: 0.78em; }
 strong { color: #1f3b57; }
 .small { font-size: 0.62em; color: #667; }
+.fase { color: #7a8ca3; font-size: 0.55em; letter-spacing: 0.12em; text-transform: uppercase; }
 .center { text-align: center; }
 </style>
 
 <!--
-BLOQUE 1 - Problema y datos (3:00)
+BLOQUE 1 · Juan Camilo · 0:00 - 3:00
+FASES: Introducción y Análisis
 -->
 
 # FitTrack
@@ -25,13 +27,34 @@ BLOQUE 1 - Problema y datos (3:00)
 Universidad Autónoma de Occidente — 20 de noviembre de 2026
 
 <!--
-0:00 - 0:20
-Buenos días. Somos el equipo de FitTrack. En 15 minutos les mostramos las tres fases
-del proyecto: la aplicación en contenedores, el procesamiento con Spark y los resultados.
-La entrega está congelada en el tag v4.0 del repositorio.
+0:00 - 0:15
+Buenos días. Somos el equipo de FitTrack. En 15 minutos les mostramos el proyecto
+en el mismo orden del informe: introducción, análisis, diseño, implementación,
+pruebas y conclusiones.
 -->
 
 ---
+
+<span class="fase">Introducción</span>
+
+## El problema
+
+- Una aplicación de seguimiento físico genera datos todos los días: medidas, metas y rutinas
+- El usuario quiere saber si progresa; el negocio quiere saber qué funciona
+- Calcular eso dentro de la aplicación la volvería lenta y frágil
+- De ahí la separación: **la app opera, el análisis responde**
+
+<!--
+0:15 - 1:00
+El problema es simple: la aplicación acumula datos, pero las preguntas interesantes
+—quién progresa, qué metas se cumplen, qué retención hay— no se contestan en el camino
+de una petición. Si las metiéramos en la app, cada consulta competiría con el registro
+de una medida. Por eso separamos dos planos desde el diseño.
+-->
+
+---
+
+<span class="fase">Introducción</span>
 
 ## Lo que pedía el proyecto
 
@@ -45,12 +68,15 @@ La entrega está congelada en el tag v4.0 del repositorio.
 | Reproducibilidad | README, tag y clon limpio verificado |
 
 <!--
-0:20 - 1:20
-Todo el proyecto se organizó alrededor de estos seis puntos del enunciado.
-No sobra ninguno y ninguno quedó a medias: cada uno tiene una medición o una prueba.
+1:00 - 1:50
+Estos seis puntos son el enunciado. Ninguno quedó a medias: cada uno tiene una
+medición o una prueba detrás. Y hay un séptimo requisito que salió en la revisión:
+que la analítica solo la vea un administrador.
 -->
 
 ---
+
+<span class="fase">Análisis</span>
 
 ## El dataset es sintético, y eso fue una decisión
 
@@ -63,10 +89,10 @@ No sobra ninguno y ninguno quedó a medias: cada uno tiene una medición o una p
 <span class="small">El validador del generador ejecuta 24 chequeos: 24 OK, 0 fallas.</span>
 
 <!--
-1:20 - 3:00
+1:50 - 3:00
 No usamos datos reales por privacidad, y el dataset no es ruido: es un simulador.
 Cada usuario tiene un perfil oculto -constancia, sensibilidad al entrenamiento, si abandona-
-y a partir de eso se simulan sus sesiones y su peso semana a semana.
+y de ahí se simulan sus sesiones y su peso semana a semana.
 Las metas se crean mirando la trayectoria real, así que el cumplimiento emerge del comportamiento.
 Y ensuciamos a propósito para que la limpieza signifique algo.
 -->
@@ -74,55 +100,86 @@ Y ensuciamos a propósito para que la limpieza signifique algo.
 ---
 
 <!--
-BLOQUE 2 - Arquitectura y despliegue (3:00)
+BLOQUE 2 · Diego · 3:00 - 6:00
+FASE: Diseño
 -->
+
+<span class="fase">Diseño</span>
 
 ## Arquitectura: dos planos separados
 
-![w:1050](../report/figuras/arquitectura-logica.png)
+![w:1020](../report/figuras/arquitectura-logica.png)
 
 El usuario usa la aplicación; el administrador consulta los indicadores.
 El análisis **no escribe** en las bases operativas y la aplicación **no calcula** indicadores.
 
 <!--
-3:00 - 4:00
+3:00 - 3:50
 Esta es la arquitectura lógica, sin tecnologías todavía.
-Arriba, el usuario final con la aplicación de seguimiento y sus datos operativos.
+Arriba, el usuario final con la aplicación y sus datos operativos.
 A la derecha, el dataset de análisis que entra a un proceso por lotes y termina en un panel
-que solo ve el administrador.
-La separación es deliberada: cada plano puede fallar sin tumbar al otro.
+que solo ve el administrador. Cada plano puede fallar sin tumbar al otro.
 -->
 
 ---
 
+<span class="fase">Diseño</span>
+
 ## Componentes: servicios, interfaces y dependencias
 
-![w:980](../report/figuras/componentes.png)
+![w:960](../report/figuras/componentes.png)
 
 <span class="small">Cada servicio valida el token contra `users`; solo `analytics` exige rol de administrador.</span>
 
 <!--
-4:00 - 4:30
+3:50 - 4:35
 Un nivel más abajo aparecen las tecnologías. Cada servicio es REST y se consume por HAProxy,
-que es el único entrypoint de /api.
-users valida el token y cada servicio lo consulta antes de responder: la autenticación no se repite.
+el único entrypoint de /api. users valida el token y los demás lo consultan antes de responder:
+la autenticación no se repite en cinco servicios.
 -->
 
 ---
 
+<span class="fase">Diseño</span>
+
 ## Despliegue: dos VMs y un clúster Spark
 
-![w:1080](../report/figuras/despliegue.png)
+![w:1060](../report/figuras/despliegue.png)
 
 <span class="small">nginx y HAProxy en el cliente; servicios y bases en el servidor; Spark trabaja por lotes.</span>
 
 <!--
-4:30 - 5:00
-A la derecha, el despliegue físico: nginx y HAProxy en el cliente, servicios y bases en el servidor,
+4:35 - 5:20
+El despliegue físico: nginx y HAProxy en el cliente, servicios y bases en el servidor,
 con volúmenes para las tres bases. Spark corre aparte y deja el JSON que sirve la API.
+Los servicios sin estado se reparten entre los dos nodos.
 -->
 
 ---
+
+<span class="fase">Diseño</span>
+
+## Pipeline de datos
+
+![w:1000](../report/figuras/pipeline.png)
+
+**El cálculo ocurre dos veces, en batch:** una para limpiar y otra para agregar. Después, la app solo lee un archivo.
+
+<!--
+5:20 - 6:00
+El diseño del análisis: CSV con esquema explícito, limpieza, Parquet particionado por año,
+KPIs y un JSON. La app no calcula nada: monta ese archivo y lo sirve.
+Con esto cierro diseño y paso a implementación.
+-->
+
+---
+
+<!--
+BLOQUE 3 · Juan David · 6:00 - 9:00
+FASES: Implementación y Pruebas
+-->
+
+<span class="fase">Implementación</span>
 
 ## Swarm: réplicas repartidas y balanceo
 
@@ -134,19 +191,17 @@ con volúmenes para las tres bases. Spark corre aparte y deja el JSON que sirve 
 <span class="small">Las réplicas no están fijas al servidor: `max_replicas_per_node: 2` y dispersión por rol.</span>
 
 <!--
-5:00 - 6:00
-Para demostrar distribución, no solo balanceo, quitamos la restricción que fijaba todo al servidor.
-Con tres réplicas y un límite de dos por nodo, Swarm las reparte entre las dos máquinas.
-Cuando se mueve una tarea, HAProxy la encuentra sola: no hay IPs escritas a mano.
+6:00 - 6:50
+La implementación no fija todo al servidor. Con tres réplicas y un límite de dos por nodo,
+Swarm las reparte entre las dos máquinas. Cuando se mueve una tarea, HAProxy la encuentra
+sola por DNS: no hay IPs escritas a mano.
 -->
 
 ---
 
-<!--
-BLOQUE 3 - Rendimiento y tolerancia (3:00)
--->
+<span class="fase">Pruebas</span>
 
-## Pruebas de carga: 500 peticiones, concurrencia 20
+## Carga: 500 peticiones, concurrencia 20
 
 | Escenario | RPS | p95 | Errores |
 |---|---|---|---|
@@ -159,14 +214,15 @@ BLOQUE 3 - Rendimiento y tolerancia (3:00)
 <span class="small">Medido con `tests/load/load_test.py`, sin dependencias externas.</span>
 
 <!--
-6:00 - 7:10
-Aquí está la evidencia del escalado. Con una réplica, 38 peticiones por segundo; con tres en el
-mismo nodo, 72. Casi el doble, y la latencia del percentil 95 baja de 655 a 412 milisegundos.
-El tercer caso es el multi-nodo: funciona sin errores, pero rinde menos. Eso lo explico después
-porque es una conclusión, no un fallo.
+6:50 - 7:30
+Con una réplica, 38 peticiones por segundo; con tres en el mismo nodo, 72. Casi el doble,
+y el p95 baja de 655 a 412 milisegundos. El tercer caso es multi-nodo: funciona sin errores
+pero rinde menos, y eso lo explico en las conclusiones porque es un hallazgo, no un fallo.
 -->
 
 ---
+
+<span class="fase">Pruebas</span>
 
 ## Estrés: dónde se rompe el laboratorio
 
@@ -181,13 +237,14 @@ porque es una conclusión, no un fallo.
 <span class="small">El goodput baja a 53,6 y 37,2 RPS: no todo lo que se intenta se completa.</span>
 
 <!--
-7:10 - 8:00
-Con hey subimos la presión. El sistema se queda en unos 60 RPS y no sube más: eso es el techo
-del laboratorio, medido, no supuesto. A partir de 100 conexiones simultáneas el cliente empieza
-a cortar por timeout a los cinco segundos.
+7:30 - 8:10
+Con hey subimos la presión. El sistema se queda en unos 60 RPS: ese es el techo del
+laboratorio, medido. Desde 100 conexiones el cliente empieza a cortar por timeout a los 5 segundos.
 -->
 
 ---
+
+<span class="fase">Pruebas</span>
 
 ## Failover: matar una réplica en plena carga
 
@@ -202,18 +259,21 @@ Los 24 errores caen en los **8 segundos** de recuperación:
 <span class="small">`MAINT` → `UP 1/3` → `UP`. Swarm repone la tarea y HAProxy la vuelve a incluir.</span>
 
 <!--
-8:00 - 9:00
-La prueba que más dice del sistema: matamos una de las tres réplicas mientras había carga.
-El servicio quedó en 99,70 por ciento de éxito, el percentil 95 no se movió y Swarm repuso la
-tarea en ocho segundos. Dos de esos errores fueron 502 en el hueco de milisegundos antes de que
-HAProxy sacara la IP muerta del balanceo.
+8:10 - 9:00
+La prueba más elocuente: matamos una de las tres réplicas con carga encima.
+99,70 por ciento de éxito, el p95 no se movió y Swarm repuso la tarea en 8 segundos.
+Los 2 errores 502 son el hueco de milisegundos antes de que HAProxy sacara la IP muerta.
+Con esto cierro pruebas de desempeño.
 -->
 
 ---
 
 <!--
-BLOQUE 4 - Analítica (3:00)
+BLOQUE 4 · Nicolás · 9:00 - 12:00 (+15 s de apertura del video)
+FASES: Implementación y Pruebas de la analítica
 -->
+
+<span class="fase">Implementación</span>
 
 ## La analítica solo la ve un administrador
 
@@ -227,32 +287,37 @@ BLOQUE 4 - Analítica (3:00)
 La restricción está en el **servicio**, no en la interfaz: ocultar la pestaña es solo comodidad.
 
 <!--
-9:00 - 9:50
-Este requisito salió de la revisión con el profesor: los indicadores agregados no los puede ver
-cualquier usuario. Implementamos roles en la base y el servicio de analítica valida el token y el rol
-en cada petición. Insistimos en que la validación está en el servidor: si alguien pide la API
-directamente sin rol, recibe 403.
+9:00 - 9:45
+Este requisito salió de la revisión con el profesor. Implementamos roles en la base y el
+servicio de analítica valida el token y el rol en cada petición. La validación está en el
+servidor: si alguien llama la API sin rol, recibe 403 aunque la pestaña no exista.
 -->
 
 ---
 
-## El pipeline: del CSV al dashboard
+<span class="fase">Implementación</span>
 
-![w:1000](../report/figuras/pipeline.png)
+## ETL, KPIs y publicación
 
-**El cálculo ocurre dos veces, en batch:** una para limpiar y otra para agregar. Después, la app solo lee un archivo.
+- **ETL**: CSV con esquema explícito, limpieza y Parquet particionado por año
+- **KPIs**: agregaciones con Spark SQL sobre el Parquet
+- **Salida**: un `analytics.json` de 12 secciones
+- **Publicación**: la API monta el archivo y lo cachea por `mtime`
+
+<span class="small">Si Spark vuelve a correr, la API sirve la versión nueva sin reiniciar.</span>
 
 <!--
-9:50 - 10:50
-El trabajo analítico no ocurre en la aplicación. Spark lee los CSV con esquema explícito, limpia,
-escribe Parquet particionado por año y luego calcula los KPIs en un único JSON.
-El servicio de analítica monta ese archivo y lo sirve; si Spark vuelve a correr, la API toma la
-versión nueva sin reiniciar.
+9:45 - 10:35
+El ETL no infiere el esquema: lo declara, para que una fecha mal formada no rompa el job.
+La limpieza corrige en sitio -fechas, libras, duplicados- y solo descarta lo imposible.
+Los KPIs salen de Spark SQL y quedan en un solo JSON que la API sirve sin tocar Spark ni las bases.
 -->
 
 ---
 
-## KPIs y validación
+<span class="fase">Pruebas</span>
+
+## Los KPIs reproducen los patrones sembrados
 
 | KPI | Valor |
 |---|---|
@@ -261,93 +326,93 @@ versión nueva sin reiniciar.
 | Metas cumplidas | 16,96 % |
 | Cambio medio de peso | −0,71 kg |
 
-**Contra los patrones sembrados:** abandono 39,53 % (≈40 %), enero 1,88×, correlaciones −0,595 y +0,597.
+**Validación:** abandono 39,53 % (≈40 %), enero 1,88×, correlaciones −0,595 y +0,597.
 
 <span class="small">El análisis recupera lo que el generador sembró: no son números inventados.</span>
 
 <!--
-10:50 - 11:50
+10:35 - 11:20
 Estos son los indicadores del dataset completo. Lo importante es la segunda línea: el generador
-dejó patrones conocidos y el análisis los recupera. Eso es lo que separa un dashboard de un cálculo:
-los números se pueden contrastar contra la realidad sembrada.
+dejó patrones y el análisis los recupera. Eso separa un dashboard de un cálculo: los números
+se pueden contrastar contra la realidad sembrada.
 -->
 
 ---
 
 <!--
-VIDEO - 2:00 (lo abre el bloque 4 y lo cierra el bloque 5)
+VIDEO · abre Nicolás (12:00 - 12:15) y cierra Lucio (14:05 - 14:20)
 -->
 
 ## Demostración
 
 <div class="center">
 
-![h:430](../report/figuras/dashboard-crop.jpeg)
+![h:400](../report/figuras/dashboard-crop.jpeg)
 
 </div>
 
-Lo que van a ver: registro, las tres bases, balanceo y la pestaña Analítica con roles.
+Registro, las tres bases, balanceo y la pestaña Analítica con roles.
 
 <!--
-11:50 - 12:00 (introducción, 10 s)
+12:00 - 12:15 (Nicolás, apertura)
 Para mostrar que todo esto funciona, un recorrido de dos minutos por la aplicación.
 
-[SE REPRODUCE EL VIDEO - 2:00]
+[SE REPRODUCE EL VIDEO · 1:50]
 
-12:00 - 12:20 (cierre, 20 s)
-Eso es el sistema completo: un usuario normal opera la app, el administrador ve la analítica
-y el balanceo reparte la carga entre las réplicas. Todo corriendo en el laboratorio.
+14:05 - 14:20 (Lucio, cierre)
+Eso es el sistema completo: el usuario opera la app, el administrador ve la analítica
+y el balanceo reparte la carga entre las réplicas.
 -->
 
 ---
 
 <!--
-BLOQUE 5 - Cierre (3:00)
+BLOQUE 5 · Lucio · 14:20 - 17:20
+FASE: Conclusiones y referencias
 -->
 
-## Conclusiones
+<span class="fase">Conclusiones</span>
 
-- **Funciona y está medido:** 72 RPS con tres réplicas, 0 errores; failover en 8 s con 99,70 % de éxito
+## Qué quedó demostrado
+
+- **Funciona y está medido:** 72 RPS con tres réplicas, 0 errores; failover en 8 s con 99,70 %
 - **El análisis es verificable:** los KPIs reproducen los patrones sembrados
 - **La separación de planos paga:** el dashboard sigue en pie con Spark apagado
 - **La reproducibilidad se probó:** un clon limpio levanta el sistema sin las VMs del laboratorio
 
+<span class="small">Limitaciones: un solo worker de Spark y bases de instancia única; el failover es de tarea, no de base.</span>
+
 <!--
-12:20 - 13:40
+14:20 - 16:20
 En una frase: no solo está desplegado, está medido. El escalado casi duplica el rendimiento,
 el sistema tolera la caída de una tarea y el análisis se puede contrastar.
-Y algo que valoramos mucho: cualquiera puede clonar el repositorio y verlo funcionar.
+Y cualquiera puede clonar el repositorio y verlo funcionar.
+Lo que falta lo decimos nosotros: el clúster de Spark tiene un worker en el mismo nodo y las
+bases son únicas, así que el failover es de tarea, no de base.
 -->
 
 ---
 
-## Limitaciones y trabajo futuro
+<span class="fase">Referencias</span>
 
-- **Un solo worker de Spark**: el segundo nodo exige NFS o HDFS para compartir el Parquet
-- **Bases de instancia única**: el failover es de tarea, no de base
-- **Multi-nodo rinde menos** que tres réplicas en un nodo: pesa la red overlay
-- **Siguiente paso**: worker en el cliente, réplica de bases y observabilidad con Prometheus
+## Referencias
 
-<!--
-13:40 - 14:40
-Preferimos decirlo antes de que lo pregunten. El clúster de Spark tiene un worker en el mismo nodo:
-para usar el segundo hace falta almacenamiento compartido, porque con file:// el Parquet queda
-repartido. Y las bases son únicas: si cae la base, el servicio no se recupera solo.
--->
+<span class="small">
 
----
+1. Docker Inc., *Docker Swarm mode overview*. docs.docker.com/engine/swarm
+2. HAProxy Technologies, *HAProxy Configuration Manual*. docs.haproxy.org
+3. Apache Software Foundation, *Spark SQL, DataFrames and Datasets Guide*. spark.apache.org
+4. FastAPI, *FastAPI documentation*. fastapi.tiangolo.com
+5. FitTrack, repositorio del proyecto, tag `v4.0-proyecto-final`. github.com/nicocpxmd/fittrack
 
-<div class="center">
-
-# Gracias
-
-**Preguntas**
-
-<span class="small">github.com/nicocpxmd/fittrack · tag v4.0-proyecto-final</span>
-
-</div>
+</span>
 
 <!--
-14:40 - 15:00
-Con eso cerramos. Quedamos atentos a las preguntas.
+16:20 - 16:40
+Estas son las fuentes principales. El repositorio está público para el curso, con el README
+y el tag de entrega.
+
+16:40 - 17:20
+Cerramos con la idea central: seis requerimientos, una separación clara de planos y evidencia
+medible. Quedamos atentos a las preguntas.
 -->
