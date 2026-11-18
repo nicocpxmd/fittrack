@@ -11,8 +11,20 @@ h2 { color: #1f3b57; font-size: 36px; margin-bottom: 0.3em; }
 table { font-size: 0.78em; }
 strong { color: #1f3b57; }
 .small { font-size: 0.62em; color: #667; }
+.equipo { font-size: 0.54em; color: #667; white-space: nowrap; }
 .fase { color: #7a8ca3; font-size: 0.55em; letter-spacing: 0.12em; text-transform: uppercase; }
 .center { text-align: center; }
+
+/* Logo institucional en la esquina superior derecha, en todas las diapositivas. */
+section::before {
+  content: "";
+  position: absolute;
+  top: 30px;
+  right: 42px;
+  width: 168px;
+  height: 30px;
+  background: url("img/logo-uao.png") no-repeat center / contain;
+}
 </style>
 
 <!--
@@ -25,8 +37,7 @@ FASES: Introducción y Análisis
 
 **Equipo 1**
 
-<span class="small">Juan Camilo Serrano · Lucio Matías Melendez Rojas · Juan David Ocampo Gutierrez<br>
-Nicolás Castro Pacheco · Diego Fernando Asprilla Palacios</span>
+<span class="equipo">Juan Camilo Serrano · Lucio Matías Melendez Rojas · Juan David Ocampo Gutierrez · Nicolás Castro Pacheco · Diego Fernando Asprilla Palacios</span>
 
 Curso de Redes e Infraestructura
 Universidad Autónoma de Occidente — 20 de noviembre de 2026
