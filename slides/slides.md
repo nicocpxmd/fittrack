@@ -23,6 +23,12 @@ strong { color: #1f3b57; }
 .fase { color: #7a8ca3; font-size: 0.55em; letter-spacing: 0.12em; text-transform: uppercase; }
 .center { text-align: center; }
 
+/* Tira de cifras para las conclusiones. */
+.cifras { display: flex; gap: 18px; margin: 20px 0 24px 0; }
+.cifras > div { flex: 1; background: #f2f5f9; border-radius: 10px; padding: 16px 18px; }
+.cifras strong { display: block; font-size: 1.8em; line-height: 1.1; color: #1f3b57; }
+.cifras span { display: block; font-size: 0.56em; color: #5b6b7c; margin-top: 4px; }
+
 /* Logo institucional en la esquina superior derecha, en todas las diapositivas. */
 section::before {
   content: "";
@@ -360,36 +366,12 @@ Los KPIs salen de Spark SQL y quedan en un solo JSON que la API sirve sin tocar 
 Estos son los indicadores del dataset completo. Lo importante es la segunda línea: el generador
 dejó patrones y el análisis los recupera. Eso separa un dashboard de un cálculo: los números
 se pueden contrastar contra la realidad sembrada.
+
+12:00 - 12:15 (apertura del video)
+Con esto termino mi parte. Para mostrar que todo esto funciona, un recorrido de dos minutos
+por la aplicación. [SE ABRE EL VIDEO FUERA DEL PDF]
 -->
 
----
-
-<!--
-VIDEO · abre Nicolás (12:00 - 12:15) y cierra Lucio (14:05 - 14:20)
--->
-
-<span class="fase">Demostración</span>
-
-## La aplicación en funcionamiento
-
-<div class="center">
-
-![h:400](../report/figuras/dashboard-crop.jpeg)
-
-</div>
-
-Registro, las tres bases, balanceo y la pestaña Analítica con roles.
-
-<!--
-12:00 - 12:15 (Nicolás, apertura)
-Para mostrar que todo esto funciona, un recorrido de dos minutos por la aplicación.
-
-[SE REPRODUCE EL VIDEO · 1:50]
-
-14:05 - 14:20 (Lucio, cierre)
-Eso es el sistema completo: el usuario opera la app, el administrador ve la analítica
-y el balanceo reparte la carga entre las réplicas.
--->
 
 ---
 
@@ -402,20 +384,55 @@ FASE: Conclusiones y referencias
 
 ## Qué quedó demostrado
 
-- **Funciona y está medido:** 72 RPS con tres réplicas, 0 errores; failover en 8 s con 99,70 %
+<div class="cifras">
+  <div><strong>72</strong><span>RPS con 3 réplicas, 0 errores</span></div>
+  <div><strong>99,70 %</strong><span>de éxito al perder una réplica</span></div>
+  <div><strong>8 s</strong><span>de recuperación</span></div>
+  <div><strong>8,46 M</strong><span>filas procesadas con Spark</span></div>
+</div>
+
 - **El análisis es verificable:** los KPIs reproducen los patrones sembrados
 - **La separación de planos paga:** el dashboard sigue en pie con Spark apagado
 - **La reproducibilidad se probó:** un clon limpio levanta el sistema sin las VMs del laboratorio
 
-<span class="small">Limitaciones: un solo worker de Spark y bases de instancia única; el failover es de tarea, no de base.</span>
+<!--
+14:05 - 14:20 (cierre del video, con el reproductor en pantalla)
+Eso es el sistema completo: el usuario opera la aplicación, el administrador ve la analítica
+y el balanceo reparte la carga entre las réplicas.
+
+14:20 - 15:30
+En una frase: no solo está desplegado, está medido.
+Estas cuatro cifras resumen el proyecto: 72 peticiones por segundo con tres réplicas y cero errores;
+99,70 por ciento de éxito cuando matamos una réplica; ocho segundos para reponerla; y 8,46 millones
+de filas procesadas con Spark.
+Y algo que valoramos: cualquiera puede clonar el repositorio y verlo funcionar.
+-->
+
+---
+
+<span class="fase">Conclusiones</span>
+
+## Limitaciones y trabajo futuro
+
+**Limitaciones**
+
+- Un solo worker de Spark: el segundo nodo exige NFS o HDFS para compartir el Parquet
+- Bases de instancia única: el failover es de tarea, no de base
+- El multi-nodo rinde menos que tres réplicas en un nodo: pesa la red overlay
+
+**Trabajo futuro**
+
+- Worker de Spark en el cliente y réplica de las bases
+- Observabilidad con Prometheus y alertas
+- CI/CD para construir y publicar las imágenes
 
 <!--
-14:20 - 16:20
-En una frase: no solo está desplegado, está medido. El escalado casi duplica el rendimiento,
-el sistema tolera la caída de una tarea y el análisis se puede contrastar.
-Y cualquiera puede clonar el repositorio y verlo funcionar.
-Lo que falta lo decimos nosotros: el clúster de Spark tiene un worker en el mismo nodo y las
-bases son únicas, así que el failover es de tarea, no de base.
+15:30 - 16:40
+Preferimos decir nosotros lo que falta.
+El clúster de Spark tiene un worker en el mismo nodo: para usar el segundo hace falta almacenamiento
+compartido. Las bases son únicas, así que si cae la base el servicio no se recupera solo. Y repartir
+entre dos nodos rinde menos que tres réplicas en uno.
+Como trabajo futuro: el worker en el cliente, réplicas de las bases, observabilidad y CI/CD.
 -->
 
 ---
@@ -435,11 +452,10 @@ bases son únicas, así que el failover es de tarea, no de base.
 </span>
 
 <!--
-16:20 - 16:40
-Estas son las fuentes principales. El repositorio está público para el curso, con el README
-y el tag de entrega.
+16:40 - 17:10
+Estas son las fuentes principales; el repositorio tiene el README y el tag de entrega.
 
-16:40 - 17:20
-Cerramos con la idea central: seis requerimientos, una separación clara de planos y evidencia
-medible. Quedamos atentos a las preguntas.
+17:10 - 17:20
+Cerramos: seis requerimientos, dos planos bien separados y evidencia medible.
+Quedamos atentos a las preguntas.
 -->

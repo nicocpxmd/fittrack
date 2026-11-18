@@ -28,11 +28,12 @@ PowerPoint. Los cambios se hacen siempre en `slides.md` y se vuelve a exportar.
 | 1 | Juan Camilo Serrano | 1–4 | Introducción y análisis | 3:00 |
 | 2 | Diego Fernando Asprilla | 5–8 | Diseño | 3:00 |
 | 3 | Juan David Ocampo | 9–12 | Implementación y pruebas | 3:00 |
-| 4 | Nicolás Castro | 13–15 + video | Analítica | 3:00 + 0:15 |
-| — | Video | 16 | Demostración | 1:50 |
-| 5 | Lucio Matías Melendez | 16–18 | Cierre y conclusiones | 0:15 + 3:00 |
+| 4 | Nicolás Castro | 13–15 | Analítica | 3:00 |
+| — | Video | fuera del PDF | Demostración | 1:50 |
+| 5 | Lucio Matías Melendez | 16–18 | Conclusiones y referencias | 3:00 |
 
-Total: 17:20, dentro del máximo de 18 minutos.
+Total: **17:20**, dentro del máximo de 18 minutos. El video no tiene diapositiva: se reproduce
+directamente desde el archivo, con la última diapositiva de analítica en pantalla.
 
 ## Guiones individuales
 
@@ -45,5 +46,5 @@ entrega.
 1. **No leer.** Cada persona usa la diapositiva y sus notas como guion, no como texto.
 2. **Cronómetro.** El ensayo debe cerrar en 17:30, no en 20.
 3. **Contingencia.** Si el laboratorio no responde, el video y la captura del dashboard cubren la demo.
-4. **Video.** Se reproduce desde el archivo, con la diapositiva 16 como portada; no está incrustado en
-   el `.pptx`.
+4. **Video.** Se reproduce desde el archivo, sin diapositiva de por medio. Nicolás lo abre al terminar
+   su bloque y Lucio lo cierra antes de las conclusiones.
