@@ -4,7 +4,7 @@
 
 
 La aplicación funciona sin Spark usando la muestra que se copia en el [README](../README.md). Si quieres ejecutar el
-análisis real:
+análisis real, los comandos se ejecutan desde la raíz del repositorio:
 
 ## Generar el dataset
 

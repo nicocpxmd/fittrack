@@ -11,7 +11,8 @@ el dashboard.
 - Para el modo clúster: master y worker de Spark en la misma red.
 
 Los scripts `run_*.sh` detectan la raíz del repositorio desde su propia ubicación. No asumen
-`/root/fittrack` ni una IP fija.
+`/root/fittrack` ni una IP fija. Todos los comandos de esta guía se ejecutan desde la raíz del
+repositorio.
 
 ## Variables
 

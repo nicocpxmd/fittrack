@@ -6,7 +6,8 @@ lleva notas del presentador con su marca de tiempo.
 
 ## Exportar
 
-El PDF está versionado: es el formato de presentación y no necesita exportarse. Solo si cambia el `.md`:
+El PDF está versionado: es el formato de presentación y no necesita exportarse. Solo si cambia el
+`.md`, desde la raíz del repositorio:
 
 ```bash
 npx -y @marp-team/marp-cli slides/slides.md --allow-local-files -o slides/fittrack.pdf

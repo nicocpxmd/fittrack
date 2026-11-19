@@ -6,6 +6,8 @@ Spark.
 
 ## Uso en el quick start
 
+Desde la raíz del repositorio:
+
 ```bash
 mkdir -p analytics/data
 cp analytics/sample/analytics.json analytics/data/analytics.json

@@ -11,7 +11,7 @@ Archivos:
 
 ## Compilación
 
-Con Tectonic:
+Desde esta carpeta (`report/`), con Tectonic:
 
 ```powershell
 tectonic reporte.tex
