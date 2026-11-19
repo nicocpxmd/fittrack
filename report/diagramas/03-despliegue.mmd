@@ -1,5 +1,5 @@
 %% Figura 3 - Diagrama de despliegue.
-%% Nodos, IPs, puertos, volumenes y que corre en cada maquina.
+%% Servicios sin estado en la red overlay; analytics queda fijo al servidor por el bind mount.
 flowchart LR
   subgraph Host[Equipo del usuario]
     NAV[Navegador]
@@ -10,15 +10,16 @@ flowchart LR
     HA["HAProxy :8080 / :8404<br/>entrypoint y balanceo"]
   end
 
+  subgraph Services["Swarm overlay: servicios (analytics fijo al servidor; el resto en server o worker)"]
+    US["users :8002"]
+    ME["measurements :8001"]
+    PR["progress :8005"]
+    GO["goals :8004"]
+    WO["workouts :8003"]
+    AN["analytics :8006<br/>(fijo al servidor)"]
+  end
+
   subgraph Server["servidorUbuntu 192.168.100.3 - Swarm manager"]
-    subgraph Services["Servicios sin estado (hasta 3 replicas)"]
-      US["users :8002"]
-      ME["measurements :8001"]
-      PR["progress :8005"]
-      GO["goals :8004"]
-      WO["workouts :8003"]
-      AN["analytics :8006"]
-    end
     subgraph DBs["Bases de datos con volumen"]
       PG[("Postgres :5432")]
       MO[("Mongo :27017")]

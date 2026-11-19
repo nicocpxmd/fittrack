@@ -146,7 +146,7 @@ restringida, porque sus datos son agregados de todos los usuarios.
 
 | Nodo | IP | Rol |
 |---|---|---|
-| `servidorUbuntu` | 192.168.100.3 | Swarm manager; microservicios, bases de datos, `analytics`, Spark master/worker |
+| `servidorUbuntu` | 192.168.100.3 | Swarm manager; bases de datos, `analytics`, Spark master/worker |
 | `clienteUbuntu` | 192.168.100.2 | Swarm worker; nginx y HAProxy |
 
 HAProxy y nginx se fijan al cliente; analytics y las bases de datos se fijan al

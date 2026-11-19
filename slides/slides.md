@@ -92,7 +92,7 @@ de una medida. Por eso separamos dos planos desde el diseño.
 |---|---|
 | Aplicación en contenedores | 6 microservicios + 3 bases, imágenes propias |
 | Clúster con balanceo | Docker Swarm, 2 nodos, HAProxy |
-| Escalabilidad medida | 1 → 3 réplicas: **38 → 72 RPS** |
+| Escalabilidad medida | 1 → 3 réplicas en un nodo: **38 → 72 RPS** |
 | Procesamiento a gran escala | Spark sobre **8,46 M de filas** |
 | Reportes en la aplicación | API + pestaña Analítica |
 | Reproducibilidad | README, tag y clon limpio verificado |
@@ -173,15 +173,15 @@ la autenticación no se repite en cinco servicios.
 
 ## Despliegue: dos VMs y un clúster Spark
 
-![h:450](../report/figuras/despliegue.png)
+![w:1000](../report/figuras/despliegue.png)
 
-<span class="small">nginx y HAProxy en el cliente; servicios y bases en el servidor; Spark trabaja por lotes.</span>
+<span class="small">nginx y HAProxy en el cliente; analytics, bases y Spark en el servidor; los servicios sin estado se reparten entre ambos nodos.</span>
 
 <!--
 4:35 - 5:20
-El despliegue físico: nginx y HAProxy en el cliente, servicios y bases en el servidor,
-con volúmenes para las tres bases. Spark corre aparte y deja el JSON que sirve la API.
-Los servicios sin estado se reparten entre los dos nodos.
+El despliegue físico: nginx y HAProxy en el cliente; bases, analytics y Spark en el servidor.
+Los servicios sin estado se reparten entre los dos nodos. Con volúmenes para las tres bases.
+Spark corre aparte y deja el JSON que sirve la API.
 -->
 
 ---
@@ -196,8 +196,8 @@ Los servicios sin estado se reparten entre los dos nodos.
 
 <!--
 5:20 - 6:00
-El diseño del análisis: CSV con esquema explícito, limpieza, Parquet particionado por año,
-KPIs y un JSON. La app no calcula nada: monta ese archivo y lo sirve.
+El diseño del análisis: CSV con esquema explícito, limpieza, Parquet con medidas y rutinas
+particionadas por año, KPIs y un JSON. La app no calcula nada: monta ese archivo y lo sirve.
 Con esto cierro diseño y paso a implementación.
 -->
 
@@ -236,7 +236,7 @@ sola por DNS: no hay IPs escritas a mano.
 |---|---|---|---|
 | 1 réplica | 38,15 | 655 ms | 0 |
 | **3 réplicas, un nodo** | **72,05** | **412 ms** | 0 |
-| 3 réplicas, dos nodos | 53,31 | 871 ms | 0 |
+| 3 réplicas, dos nodos | 53,31–54,22 | 839–871 ms | 0 |
 
 **1,89× más rendimiento** y 37 % menos latencia al escalar en un nodo.
 
@@ -280,7 +280,7 @@ laboratorio, medido. Desde 100 conexiones el cliente empieza a cortar por timeou
 | Escenario | Éxito | Errores | p95 |
 |---|---|---|---|
 | Control | 100 % | 0 | 400 ms |
-| **Con `docker kill`** | **99,70 %** | 24 | 401 ms |
+| **Con `docker kill`** | **99,70 %** | 24 (0,30 %) | 401 ms |
 
 Los 24 errores caen en los **8 segundos** de recuperación:
 22 conexiones cortadas y 2 respuestas `502`.
@@ -290,7 +290,7 @@ Los 24 errores caen en los **8 segundos** de recuperación:
 <!--
 8:10 - 9:00
 La prueba más elocuente: matamos una de las tres réplicas con carga encima.
-99,70 por ciento de éxito, el p95 no se movió y Swarm repuso la tarea en 8 segundos.
+99,70 por ciento de éxito, el p95 no se movió y el servicio se recuperó en 8 segundos.
 Los 2 errores 502 son el hueco de milisegundos antes de que HAProxy sacara la IP muerta.
 Con esto cierro pruebas de desempeño.
 -->
@@ -319,7 +319,7 @@ La restricción está en el **servicio**, no en la interfaz: ocultar la pestaña
 9:00 - 9:45
 Este requisito salió de la revisión con el profesor. Implementamos roles en la base y el
 servicio de analítica valida el token y el rol en cada petición. La validación está en el
-servidor: si alguien llama la API sin rol, recibe 403 aunque la pestaña no exista.
+servidor: si alguien llama la API con un token de usuario normal, recibe 403 aunque la pestaña no exista.
 -->
 
 ---
@@ -328,7 +328,7 @@ servidor: si alguien llama la API sin rol, recibe 403 aunque la pestaña no exis
 
 ## ETL, KPIs y publicación
 
-- **ETL**: CSV con esquema explícito, limpieza y Parquet particionado por año
+- **ETL**: CSV con esquema explícito, limpieza y Parquet con medidas y rutinas particionadas por año
 - **KPIs**: agregaciones con Spark SQL sobre el Parquet
 - **Salida**: un `analytics.json` de 12 secciones
 - **Publicación**: la API monta el archivo y lo cachea por `mtime`
@@ -350,7 +350,7 @@ Los KPIs salen de Spark SQL y quedan en un solo JSON que la API sirve sin tocar 
 
 | KPI | Valor |
 |---|---|
-| Usuarios / activos a 12 semanas | 100.000 / 54.758 (54,8 %) |
+| Usuarios / activos en las últimas 12 semanas | 100.000 / 54.758 (54,8 %) |
 | Sesiones por semana | 2,68 |
 | Metas cumplidas | 16,96 % |
 | Cambio medio de peso | −0,71 kg |
@@ -361,7 +361,8 @@ Los KPIs salen de Spark SQL y quedan en un solo JSON que la API sirve sin tocar 
 
 <!--
 10:35 - 11:20
-Estos son los indicadores del dataset completo. Lo importante es la segunda línea: el generador
+Estos son los indicadores del dataset completo. Ojo: "activos en las últimas 12 semanas" es
+actividad reciente; la retención a 12 semanas es 51,6 %. Lo importante es la segunda línea: el generador
 dejó patrones y el análisis los recupera. Eso separa un dashboard de un cálculo: los números
 se pueden contrastar contra la realidad sembrada.
 
@@ -383,7 +384,7 @@ FASE: Conclusiones y referencias
 ## Qué quedó demostrado
 
 <div class="cifras">
-  <div><strong>72</strong><span>RPS con 3 réplicas, 0 errores</span></div>
+  <div><strong>72</strong><span>RPS con 3 réplicas en un nodo, 0 errores</span></div>
   <div><strong>99,70 %</strong><span>de éxito al perder una réplica</span></div>
   <div><strong>8 s</strong><span>de recuperación</span></div>
   <div><strong>8,46 M</strong><span>filas procesadas con Spark</span></div>
@@ -394,13 +395,13 @@ FASE: Conclusiones y referencias
 - **La reproducibilidad se probó:** un clon limpio levanta el sistema sin las VMs del laboratorio
 
 <!--
-14:05 - 14:20 (cierre del video, con el reproductor en pantalla)
+14:15 - 14:20 (cierre del video, con el reproductor en pantalla)
 Eso es el sistema completo: el usuario opera la aplicación, el administrador ve la analítica
 y el balanceo reparte la carga entre las réplicas.
 
 14:20 - 15:30
 En una frase: no solo está desplegado, está medido.
-Estas cuatro cifras resumen el proyecto: 72 peticiones por segundo con tres réplicas y cero errores;
+Estas cuatro cifras resumen el proyecto: 72 peticiones por segundo con tres réplicas en un nodo y cero errores;
 99,70 por ciento de éxito cuando matamos una réplica; ocho segundos para reponerla; y 8,46 millones
 de filas procesadas con Spark.
 Y algo que valoramos: cualquiera puede clonar el repositorio y verlo funcionar.
