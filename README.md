@@ -7,7 +7,7 @@ filas y publica indicadores agregados en la pestaña **Analítica**, visible sol
 La aplicación y el análisis están separados a propósito: los microservicios usan sus bases de datos y
 el pipeline trabaja por lotes sobre archivos, publicando un JSON que la app solo lee.
 
-Entrega congelada: tag **`v4.0-proyecto-final`**.
+Entrega congelada: tag **`v4.1-proyecto-final`**.
 
 ## Qué incluye
 
@@ -43,7 +43,7 @@ cd fittrack
 ```
 
 > La rama por defecto (`main`) está atrasada hasta que se haga el merge. Usa `proyecto-final` o el tag
-> `v4.0-proyecto-final`.
+> `v4.1-proyecto-final`.
 
 ### 2. Crear el `.env`
 
