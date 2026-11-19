@@ -16,10 +16,10 @@ procesa un dataset sintético de 100.000 usuarios y 8,4 millones de filas, aplic
 duplicados, fechas y unidades, y calcula KPIs de retención, adherencia, metas y evolución de peso.
 Los resultados se publican por una API y se muestran en una pestaña “Analítica”, con acceso restringido a
 usuarios con rol de administrador. Las pruebas de carga
-muestran una mejora de 1,89× en RPS al pasar de una a tres réplicas, y la validación contra los
-patrones sembrados confirma que el análisis recupera las señales del dataset. En la prueba de
-failover, matar una de tres réplicas mantuvo el servicio en 99,70 % de éxito y recuperó la tarea en
-8 segundos. El trabajo documenta las decisiones, los problemas encontrados y una guía reproducible.
+muestran una mejora de 1,89× en RPS al pasar de una a tres réplicas en un mismo nodo, y la validación
+contra los patrones sembrados confirma que el análisis recupera las señales del dataset. En la prueba
+de failover, matar una de tres réplicas mantuvo el servicio en 99,70 % de éxito y HAProxy volvió a
+enrutar en 8 segundos. El trabajo documenta las decisiones, los problemas encontrados y una guía reproducible.
 
 **Palabras clave:** Docker Swarm, microservicios, Apache Spark, análisis distribuido, HAProxy,
 dashboard, reproducibilidad.
@@ -71,14 +71,20 @@ real, pero sí permiten evaluar el pipeline, la limpieza y la capacidad de recup
 ### 2.2 Alternativas evaluadas
 
 Se compararon las opciones disponibles para cada dimensión del despliegue. El criterio fue doble: usar
-lo que ya estaba disponible en el laboratorio y caber en 3,8 GiB de RAM por nodo, porque el objetivo
+lo que ya estaba disponible en el laboratorio y caber en la memoria disponible (2 GiB en el cliente y
+4 GiB en el servidor), porque el objetivo
 del curso es demostrar el funcionamiento, no maximizar la sofisticación de las herramientas.
+
+En el empaquetado se eligió una imagen por servicio, con su propio `Dockerfile`, frente a una imagen
+única: aísla dependencias y permite escalar cada servicio por separado. En el procesamiento se usó
+Spark standalone en el servidor; YARN o Kubernetes habrían añadido una capa de gestión de recursos
+que no cabe en el laboratorio.
 
 | Dimensión | Alternativas | Decisión y motivo |
 |---|---|---|
 | Orquestación | Docker Compose, Swarm, Kubernetes | **Swarm**: ya estaba inicializado en el laboratorio, es nativo de Docker y suficiente para dos nodos. Kubernetes habría exigido más recursos y complejidad. |
 | Balanceo | nginx, HAProxy, Traefik | **HAProxy**: `server-template` descubre tareas de Swarm por DNS y permite balanceo round-robin con health checks. |
-| Procesamiento | Pandas, Spark, Flink | **Spark**: escalable, tolerante a fallos y disponible en el laboratorio. Pandas no cabe cómodamente en 3,8 GiB para 8,4 M de filas; Flink está orientado a streaming. |
+| Procesamiento | Pandas, Spark, Flink | **Spark**: escalable, tolerante a fallos y disponible en el laboratorio. Pandas no cabe cómodamente en los 4 GiB del servidor para 8,4 M de filas; Flink está orientado a streaming. |
 | Almacenamiento analítico | JDBC a Postgres, Parquet + JSON | **Parquet + JSON**: separa el batch de la app, evita un esquema nuevo y permite que el dashboard funcione sin Spark encendido. |
 | Visualización | Chart.js/CDN, tablas y barras CSS | **CSS**: sin dependencias externas, funciona offline y se integra con el frontend existente. |
 
@@ -87,7 +93,7 @@ del curso es demostrar el funcionamiento, no maximizar la sofisticación de las 
 Los requisitos se derivaron del enunciado: despliegue en clúster, escalabilidad, balanceo, pruebas
 de desempeño, dataset de gran escala, pipeline de análisis, reportes y dashboard. Se añadieron dos
 requisitos no funcionales: reproducibilidad (scripts y README) y operación con recursos limitados
-(dos VMs, 3,8 GiB en el servidor).
+(dos VMs, 4 GiB en el servidor y 2 GiB en el cliente).
 
 Durante la revisión de avances se sumó un requisito funcional: los indicadores agregados solo puede
 consultarlos un usuario con rol de administrador. Un usuario registrado normalmente usa la aplicación
@@ -143,8 +149,8 @@ restringida, porque sus datos son agregados de todos los usuarios.
 | `servidorUbuntu` | 192.168.100.3 | Swarm manager; microservicios, bases de datos, `analytics`, Spark master/worker |
 | `clienteUbuntu` | 192.168.100.2 | Swarm worker; nginx y HAProxy |
 
-HAProxy y nginx se fijan al cliente; los servicios con estado y las bases de datos se fijan al
-servidor para que los volúmenes y bind mounts estén disponibles. La red overlay de Swarm conecta los
+HAProxy y nginx se fijan al cliente; analytics y las bases de datos se fijan al
+servidor para que los bind mounts y volúmenes estén disponibles. La red overlay de Swarm conecta los
 dos nodos.
 
 ### 3.4 Pipeline de datos
@@ -178,8 +184,8 @@ fuera de rango; los nulos se conservan y las agregaciones los ignoran.
 
 ### 3.6 KPIs y algoritmos
 
-- **Retención:** semanas entre registro y última actividad; porcentaje con actividad a 4, 12 y 26
-  semanas, global y por cohorte mensual.
+- **Retención:** semanas entre registro y última actividad; porcentaje que permaneció activo al menos
+  4, 12 y 26 semanas, global y por cohorte mensual.
 - **Adherencia:** sesiones por semana = rutinas / semanas activas; distribución en cubos.
 - **Metas:** tasa de cumplimiento por objetivo y por tercil de ambición
   (`|objetivo/inicial − 1|`).
@@ -197,18 +203,19 @@ variables de entorno, los volúmenes y las restricciones de placement. Las bases
 volúmenes nombrados; MySQL carga los esquemas de `workouts` y `goals` en el primer arranque.
 
 HAProxy se construyó con una configuración que usa `server-template` y el resolver DNS de Docker
-(`127.0.0.11`). Cada backend admite hasta seis réplicas y balancea en round-robin. Las stats están en
+(`127.0.0.11`). Los backends de microservicios admiten hasta seis réplicas, salvo analytics (dos); el
+frontend web admite tres. Todos balancean en round-robin. Las stats están en
 `:8404`.
 
 Un problema encontrado: el nginx del frontend proxeaba `/api/*` a los nombres de servicio y fallaba
 al arrancar con `host not found in upstream "users"` cuando los servicios aún no existían. Se corrigió
 dejando nginx como servidor estático y HAProxy como único entrypoint de API. La imagen pasó a
-`fittrack-nginx:v4`.
+`fittrack-nginx:v5`.
 
 ### 4.2 Parte 2: Spark y analítica
 
 El ETL (`spark/etl.py`) lee los CSV con esquema explícito, aplica las reglas de limpieza y escribe
-Parquet particionado por año. Los KPIs (`spark/analytics.py`) leen el Parquet y generan un JSON con
+Parquet, con medidas y rutinas particionadas por año. Los KPIs (`spark/analytics.py`) leen el Parquet y generan un JSON con
 secciones: dataset, limpieza, KPIs, retención, adherencia, metas, peso, estacionalidad, rutinas,
 ciudades y validación.
 
@@ -229,8 +236,8 @@ en `ADMIN_EMAIL` y `ADMIN_PASSWORD`, de forma idempotente y sin sobrescribir una
 La restricción no vive en el frontend. El servicio `analytics` valida el token contra `users` en cada
 petición y exige `role = admin`, siguiendo el mismo patrón que usan los demás servicios; los datos solo
 se sirven a un administrador y `/health` queda abierto para monitoreo. La interfaz oculta la pestaña
-cuando el rol no es de administrador, pero se trata de una comodidad: una petición directa a la API sin
-rol recibe `403`. Las bases creadas antes de este cambio se actualizan con una migración
+cuando el rol no es de administrador, pero se trata de una comodidad: una petición directa a la API
+con un token de usuario normal recibe `403`. Las bases creadas antes de este cambio se actualizan con una migración
 `ALTER TABLE` documentada en el repositorio.
 
 ### 4.4 Reproducibilidad
@@ -288,7 +295,10 @@ eso el dataset apenas pierde volumen y aun así queda consistente.
 
 ### 5.3 KPIs y validación
 
-Los KPIs se calcularon sobre el dataset completo. Para descartar que sean artefactos del cálculo, el
+Los KPIs se calcularon sobre el dataset completo. Dos cifras pueden confundirse: la actividad reciente
+(54,8 %) cuenta quién siguió activo en las últimas 12 semanas del dataset, mientras que la retención a
+12 semanas (51,6 %) cuenta quién permaneció activo al menos 12 semanas desde su registro. Son métricas
+distintas. Para descartar que sean artefactos del cálculo, el
 generador deja patrones sembrados y el pipeline los recupera: la segunda tabla contrasta el valor
 esperado con el obtenido en los cinco casos. Las correlaciones de peso son las más contundentes:
 −0,595 al bajar de peso y +0,597 al ganar músculo, frente a umbrales de −0,3 y +0,3.
@@ -296,7 +306,7 @@ esperado con el obtenido en los cinco casos. Las correlaciones de peso son las m
 | KPI | Valor |
 |---|---|
 | Usuarios | 100.000 |
-| Activos a 12 semanas | 54.758 (54,8 %) |
+| Activos en las últimas 12 semanas | 54.758 (54,8 %) |
 | Sesiones/semana | 2,68 |
 | Metas cumplidas | 16,96 % |
 | Cambio medio de peso | −0,71 kg |
@@ -356,7 +366,7 @@ Prueba de failover: 8.000 peticiones a `/api/users/me`, concurrencia 20, con `us
 Los 24 errores se concentran en la ventana de 8 segundos del failover, no se reparten por la prueba:
 22 son conexiones cortadas (código 0, peticiones ya enviadas al contenedor que murió) y 2 son `502`
 de HAProxy. Sobre las ~780 peticiones que pasaron en esa ventana, falló cerca del 3 %; el 99,7 % del
-total no notó nada. El p95 quedó igual que en el control (400,66 vs 400,38 ms): las dos réplicas
+total no notó nada. El p95 quedó prácticamente igual que en el control (400,66 vs 400,38 ms): las dos réplicas
 sobrevivientes absorbieron el tráfico sin degradar la latencia.
 
 La línea de tiempo de HAProxy, muestreada cada segundo, da 8 segundos de recuperación:
@@ -370,7 +380,8 @@ La línea de tiempo de HAProxy, muestreada cada segundo, da 8 segundos de recupe
 El `502` se explica por la configuración: HAProxy usa `server-template` con resolución DNS de Docker
 (`resolvers docker`), no health checks HTTP activos. Cuando el contenedor muere, su IP desaparece del
 DNS y HAProxy la retira en el siguiente ciclo; en ese hueco de milisegundos todavía puede mandar una
-petición a la IP muerta. Con `option redispatch` y `retries` el cliente no lo vería.
+petición a la IP muerta. Con `option redispatch` y `retries` se reduciría la ventana en que el cliente
+recibe un `502`.
 
 La prueba demuestra tolerancia a fallos **a nivel de tarea**. Si cae el nodo completo o la base de
 datos, el servicio no se recupera solo: las bases son instancias únicas en `role=server`.
@@ -390,7 +401,8 @@ datos, el servicio no se recupera solo: las bases son instancias únicas en `rol
   distribución multi-nodo está probada, pero el throughput no mejora por la red overlay y el worker
   de 2 cores; el servidor compite con el stack.
 - **Riesgos:** memoria y swap al correr Spark con el stack; tareas huérfanas de intentos anteriores;
-  la rama `main` del repo no refleja la versión Docker; la contraseña del administrador vive en el
+  la entrega vive en la rama `proyecto-final` y en el tag `v4.1`, y la rama `main` quedó en una
+  versión anterior que no debe usarse para desplegar; la contraseña del administrador vive en el
   archivo de entorno, aceptable en el laboratorio pero no en producción.
 
 ## 6. Conclusiones y trabajo futuro
@@ -402,7 +414,7 @@ escalado a tres réplicas en un nodo casi duplicó el throughput (72,05 RPS, 0 e
 distribución entre los dos nodos se demostró con 2+1 y 1+2 réplicas, aunque el rendimiento bajó a
 53–54 RPS por la red overlay y el worker de 2 cores. El estrés marcó una meseta de ~60 RPS y timeouts
 desde 100 conexiones. En el failover, matar una de tres tareas dejó el servicio en 99,70 % de éxito,
-con el p95 intacto y recuperación en 8 segundos. El acceso a la analítica quedó restringido a
+con el p95 prácticamente intacto y recuperación en 8 segundos. El acceso a la analítica quedó restringido a
 administradores, con la validación en el servicio y no solo en la interfaz.
 
 Trabajo futuro:
@@ -411,7 +423,7 @@ Trabajo futuro:
    repartido entre nodos; medir 1 vs 2 workers.
 2. **Replicar las bases de datos** (Postgres/MySQL/Mongo) para eliminar el punto único de fallo;
    hoy el failover es a nivel de tarea, no de base.
-3. **`option redispatch` y `retries` en HAProxy** para que el cliente no reciba los `502` del hueco
+3. **`option redispatch` y `retries` en HAProxy** para reducir los `502` que el cliente recibe en el hueco
    entre la muerte de la tarea y la retirada de su IP del DNS.
 4. **Streaming** con Structured Streaming para KPIs en tiempo real.
 5. **Observabilidad:** métricas de HAProxy, Prometheus/Grafana y alertas.
@@ -427,7 +439,7 @@ Trabajo futuro:
 4. Apache Software Foundation, *Structured Streaming Programming Guide*.
    https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html
 5. FastAPI, *FastAPI documentation*. https://fastapi.tiangolo.com/
-6. FitTrack, repositorio del proyecto, rama `proyecto-final`.
+6. FitTrack, repositorio del proyecto, rama `proyecto-final`, tag `v4.1-proyecto-final`.
    https://github.com/nicocpxmd/fittrack
 7. FitTrack-Synth, generador y validador del dataset, carpeta `dataset/`.
 8. IEEE, *IEEE Conference Template*. https://www.ieee.org/conferences/publishing/templates.html
