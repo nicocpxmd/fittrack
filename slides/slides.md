@@ -445,7 +445,7 @@ Como trabajo futuro: el worker en el cliente, réplicas de las bases, observabil
 2. HAProxy Technologies, *HAProxy Configuration Manual*. docs.haproxy.org
 3. Apache Software Foundation, *Spark SQL, DataFrames and Datasets Guide*. spark.apache.org
 4. FastAPI, *FastAPI documentation*. fastapi.tiangolo.com
-5. FitTrack, repositorio del proyecto, tag `v4.0-proyecto-final`. github.com/nicocpxmd/fittrack
+5. FitTrack, repositorio del proyecto, tag `v4.1-proyecto-final`. github.com/nicocpxmd/fittrack
 
 </span>
 

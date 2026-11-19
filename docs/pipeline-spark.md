@@ -89,7 +89,7 @@ la API toma el JSON nuevo por `mtime` sin reiniciar el contenedor.
 El pipeline funciona con un worker. Para dos nodos necesitas que ambos vean el mismo dataset y el
 mismo directorio de salida (NFS/HDFS) o copiar el dataset a la misma ruta en cada worker. Con
 `file://` local, el Parquet de salida quedaría repartido entre nodos. El laboratorio usa un solo
-worker; el modo de dos nodos queda como trabajo futuro.
+worker; la configuración de dos nodos queda fuera de esta entrega.
 
 
 

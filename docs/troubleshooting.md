@@ -123,7 +123,7 @@ export PATH="$SPARK_HOME/bin:$PATH"
 
 ## Spark falla por memoria
 
-El servidor de laboratorio tiene 3,8 GiB. Baja `EXECUTOR_MEMORY` o detén el stack mientras corre el
+El servidor de laboratorio tiene 4 GiB (3,8 GiB visibles). Baja `EXECUTOR_MEMORY` o detén el stack mientras corre el
 batch. En una máquina de 8 GB o más no debería ser problema.
 
 ## La imagen Docker de Spark no puede escribir

@@ -78,8 +78,9 @@ docker stack deploy -c docker-stack.yml fittrack
 docker stack services fittrack
 ```
 
-Espera a que todos los servicios estén `1/1`. El entrypoint es `http://<worker-ip>:8080`; las stats
-de HAProxy, `http://<worker-ip>:8404` (admin / admin).
+Espera a que los servicios estén en su número de réplicas: `1/1` para las bases, `analytics`, `nginx`
+y `haproxy`, y `3/3` para `users` y `measurements`. El entrypoint es `http://<worker-ip>:8080`; las
+stats de HAProxy, `http://<worker-ip>:8404` (admin / admin).
 
 > `ADMIN_EMAIL` y `ADMIN_PASSWORD` tienen que estar en el `.env` **antes** de desplegar: el servicio de
 > usuarios los lee al arrancar para crear el administrador. Si el stack ya existía con una base

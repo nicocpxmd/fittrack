@@ -1,9 +1,8 @@
 # FitTrack — montaje sin Docker (legado)
 
 > **Guía histórica.** Este documento describe el montaje con systemd + nginx, anterior al stack de
-> Docker/Swarm. Para el proyecto final usa el `README.md` de la raíz. Se conserva como referencia:
-> las rutas de los comandos (`services/`, `frontend/`, `deploy/`) son las del repositorio original;
-> la carpeta `deploy/` quedó junto a esta guía en `docs/legacy/bare-metal/deploy/`.
+> Docker/Swarm. Para el proyecto final usa el `README.md` de la raíz. Se conserva como referencia;
+> las rutas son relativas a la raíz del repositorio.
 
 Aplicación web de seguimiento físico basada en microservicios. Cada usuario registra medidas corporales, rutinas y metas, y consulta su progreso. Los datos de cada cuenta están aislados: ningún servicio entrega ni modifica registros de otro usuario.
 
@@ -50,7 +49,7 @@ services/
   users/ measurements/ progress/     Python (FastAPI)
   workouts/ goals/                   Node.js
   <servicio>/.env.example            Variables de entorno (sin valores reales)
-deploy/
+docs/legacy/bare-metal/deploy/
   nginx/fittrack.conf        Configuración de nginx (Ubuntu1)
   systemd/fittrack-*.service Unidades de arranque automático (Ubuntu2)
   netplan/98-fittrack-eth1.yaml  Ruta de red en Ubuntu2 (ver "Red")
@@ -142,10 +141,10 @@ El puerto se toma de la variable `PORT` del `.env`.
 
 ### 5. Arranque automático con systemd (Ubuntu2)
 
-Las unidades de `deploy/systemd/` arrancan los cinco servicios con la máquina y los reinician si se caen. Suponen el proyecto en `/home/vagrant/fittrack_taller/services` y el usuario `vagrant`; si tu ruta es distinta, edita `WorkingDirectory` y `ExecStart` antes de copiarlas.
+Las unidades de `docs/legacy/bare-metal/deploy/systemd/` arrancan los cinco servicios con la máquina y los reinician si se caen. Suponen el proyecto en `/home/vagrant/fittrack_taller/services` y el usuario `vagrant`; si tu ruta es distinta, edita `WorkingDirectory` y `ExecStart` antes de copiarlas.
 
 ```bash
-sudo cp deploy/systemd/fittrack-*.service /etc/systemd/system/
+sudo cp docs/legacy/bare-metal/deploy/systemd/fittrack-*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now fittrack-users fittrack-measurements fittrack-progress fittrack-workouts fittrack-goals
 systemctl is-active fittrack-users fittrack-measurements fittrack-progress fittrack-workouts fittrack-goals
@@ -163,7 +162,7 @@ journalctl -u fittrack-<nombre> -n 30 --no-pager  # ver por qué falló
 ```bash
 sudo mkdir -p /var/www/fittrack
 sudo cp frontend/index.html /var/www/fittrack/
-sudo cp deploy/nginx/fittrack.conf /etc/nginx/sites-available/fittrack
+sudo cp docs/legacy/bare-metal/deploy/nginx/fittrack.conf /etc/nginx/sites-available/fittrack
 sudo ln -s /etc/nginx/sites-available/fittrack /etc/nginx/sites-enabled/fittrack
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
@@ -173,10 +172,10 @@ Abrir `http://192.168.100.2` en el navegador.
 
 ### 7. Red entre las VMs (Ubuntu2)
 
-En el entorno de Vagrant, el DHCP de `eth0` instalaba una ruta `192.168.100.2 via 10.0.2.2`, y las respuestas hacia Ubuntu1 salían por la interfaz equivocada. `deploy/netplan/98-fittrack-eth1.yaml` agrega una ruta a `192.168.100.2/32` por `eth1` con menor métrica, y sobrevive a reinicios:
+En el entorno de Vagrant, el DHCP de `eth0` instalaba una ruta `192.168.100.2 via 10.0.2.2`, y las respuestas hacia Ubuntu1 salían por la interfaz equivocada. `docs/legacy/bare-metal/deploy/netplan/98-fittrack-eth1.yaml` agrega una ruta a `192.168.100.2/32` por `eth1` con menor métrica, y sobrevive a reinicios:
 
 ```bash
-sudo cp deploy/netplan/98-fittrack-eth1.yaml /etc/netplan/
+sudo cp docs/legacy/bare-metal/deploy/netplan/98-fittrack-eth1.yaml /etc/netplan/
 sudo chmod 600 /etc/netplan/98-fittrack-eth1.yaml
 sudo netplan try
 ip route get 192.168.100.2     # debe decir "dev eth1"

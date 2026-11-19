@@ -1,14 +1,14 @@
-# Handoff del proyecto final — FitTrack + Spark
+# Estado final del proyecto — FitTrack + Spark
 
-**Fecha:** 2026-11-11
 **Entrega:** viernes 2026-11-20
-**Versión de trabajo:** rama `proyecto-final` (README reproducible)
-**Snapshot de entrega:** tag `v4.1-proyecto-final`
+**Tag de entrega:** `v4.1-proyecto-final`
+**Rama de trabajo:** `proyecto-final`
+**Estado:** cerrado para entrega
 
-> **Para instalar y ejecutar, sigue el [`README.md`](../README.md).** Este documento describe el
-> estado del proyecto; no repite la instalación.
+> Para instalar y ejecutar, sigue el [`README.md`](../README.md). Este documento resume el estado
+> final y los enlaces de la entrega; no repite la instalación.
 
-## 1. Qué está hecho
+## 1. Entregables
 
 | Parte | Estado | Evidencia |
 |---|---|---|
@@ -22,8 +22,10 @@
 | Pestaña “Analítica” | ✅ Funcionando | Captura en `report/figuras/dashboard.jpeg` |
 | README reproducible | ✅ En el repo | `README.md` |
 | Prueba de clon limpio | ✅ Superada | Clon del tag + Compose: 11 contenedores, 3 bases y dashboard |
-| Informe IEEE | ✅ Compilado | `report/reporte.pdf`, 5 páginas |
-| Diapositivas | 🟡 Borrador | `slides/slides.md` |
+| Informe IEEE | ✅ 7 páginas | `report/reporte.pdf` |
+| Diapositivas | ✅ 18 páginas | `slides/fittrack.pdf` |
+| Video de demostración | ✅ 2:00, sin audio | Archivo aparte, no versionado |
+| Guiones individuales | ✅ 5 PDF | Repositorio privado del equipo, fuera de la entrega |
 | Tag de entrega | ✅ Publicado | `v4.1-proyecto-final` |
 
 ## 2. Cómo verlo en 5 minutos en tu máquina
@@ -40,10 +42,6 @@ cp analytics/sample/analytics.json analytics/data/analytics.json
 docker compose up -d --build
 ```
 
-> `v4.1-proyecto-final` es el snapshot congelado de la entrega. Para trabajar sobre el proyecto usa
-> la rama `proyecto-final` (va un commit adelante, solo en documentación). `main` está atrasada hasta
-> que se haga el merge.
-
 En PowerShell:
 
 ```powershell
@@ -59,45 +57,28 @@ Abrir `http://localhost:8080`, registrarse (cada uno crea su usuario) y comproba
 **Analítica** no aparece: es solo para administradores. Para verla, cierra sesión y entra con
 `ADMIN_EMAIL` / `ADMIN_PASSWORD` del `.env`.
 
-Para el pipeline completo con Spark, seguir [`docs/pipeline-spark.md`](pipeline-spark.md).
+Para el pipeline completo con Spark, seguir [`pipeline-spark.md`](pipeline-spark.md).
 
-## 3. Qué falta
+## 3. Estado de las ramas
 
-- **Diapositivas:** pasar `slides/slides.md` a PowerPoint/Google Slides y dejarlas en 15 minutos.
-- **Sustentación:** guion y ensayo; si la presentación es pregrabada, también la grabación del video.
-- **Guía de preguntas:** respuestas preparadas para el jurado (por qué Swarm y no Kubernetes, por qué
-  el failover es de tarea y no de nodo, por qué el dataset es sintético, qué pasa si cae una base).
-- **Entrega en UAO virtual:** subir el PDF del informe y las diapositivas.
-- **Merge de `proyecto-final` a `main`:** `main` sigue atrasada; ver la sección 4.
-- **Opcional:** worker de Spark en `clienteUbuntu` para medir 1 vs 2 workers. Requiere NFS o HDFS,
-  porque con `file://` el Parquet quedaría repartido entre nodos.
-
-## 4. Reglas de merge
-
-- La entrega vive en `proyecto-final` y en el tag `v4.1-proyecto-final`.
-- `main` no refleja la versión Docker; el merge es el pendiente #18 de `infraeip`.
-- Antes de mergear: integrar `origin/main` dentro de `proyecto-final`, resolver conflictos
-  (`services/goals`, `services/workouts/.env`, `README`, `docs/legacy/bare-metal/README.md`), probar
-  el stack y revisar con el equipo.
+- La entrega vive en la rama `proyecto-final` y en el tag `v4.1-proyecto-final`.
+- La rama `main` quedó en una versión anterior; no se usa para desplegar.
 - Los tags `v3.3`, `v3.4`, `v3.5`, `v3.7`, `v3.8`, `v3.9` y `v4.0` se conservan por si hay enlaces
-  externos; **no se mueven**. `v3.2` y `v3.6` se eliminaron el 2026-11-11 y sus commits siguen en la
-  rama.
-  `v3.2` y `v3.6` se eliminaron el 2026-11-11 y sus commits siguen en la rama.
-- Mientras tanto, el link seguro para el Excel es:
-  `https://github.com/nicocpxmd/fittrack/tree/v4.1-proyecto-final`.
+  externos. `v3.2` y `v3.6` se eliminaron el 2026-11-11 y sus commits siguen en la rama.
 
-## 5. Enlaces
+## 4. Enlaces
 
 | Qué | Dónde |
 |---|---|
 | Repo | `https://github.com/nicocpxmd/fittrack` |
 | Tag de entrega | `https://github.com/nicocpxmd/fittrack/tree/v4.1-proyecto-final` |
-| README (instalación) | `https://github.com/nicocpxmd/fittrack/blob/proyecto-final/README.md` |
-| Informe (PDF) | `report/reporte.pdf` |
+| README (instalación) | `https://github.com/nicocpxmd/fittrack/blob/v4.1-proyecto-final/README.md` |
+| Informe (PDF, 7 páginas) | `report/reporte.pdf` |
 | Informe (LaTeX) | `report/reporte.tex` |
-| Informe (Markdown) | `report/reporte.md` |
+| Informe (Markdown de trabajo) | `report/reporte.md` |
 | Diagramas Mermaid | `report/diagramas.md` |
-| Diapositivas | `slides/slides.md` |
+| Diapositivas (PDF, 18 páginas) | `slides/fittrack.pdf` |
+| Fuente de las diapositivas | `slides/slides.md` |
 | Consistencia dataset–app | `dataset/CONSISTENCIA.md` |
 | Captura del dashboard | `report/figuras/dashboard.jpeg` |
 | Guía sin Docker (legado) | `docs/legacy/bare-metal/README.md` |

@@ -4,7 +4,7 @@ Archivos:
 
 - `reporte.tex`: fuente LaTeX con la plantilla IEEE (`IEEEtran`). Es la versión que se compila.
 - `reporte.pdf`: PDF final, 7 páginas.
-- `reporte.md`: borrador de trabajo en Markdown; no es la fuente del PDF.
+- `reporte.md`: versión de trabajo en Markdown; la fuente del PDF es `reporte.tex`.
 - `diagramas.md`: diagramas Mermaid de componentes, despliegue y pipeline.
 - `figuras/`: `arquitectura-logica.png`, `componentes.png`, `despliegue.png`, `pipeline.png`,
   `dashboard.jpeg` y `dashboard-crop.jpeg`.

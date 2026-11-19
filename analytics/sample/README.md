@@ -24,4 +24,5 @@ El servicio `analytics` monta `analytics/data` en `/data` (solo lectura). Si des
 ## Qué no es
 
 No es el dataset ni un sustituto del pipeline: son solo los agregados que consume el dashboard. Para
-recalcularlos, sigue la sección de Spark del `README.md`.
+recalcularlos, sigue la sección [Pipeline de Spark](../../README.md#pipeline-de-spark-opcional) del
+README de la raíz.

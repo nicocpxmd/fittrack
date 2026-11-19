@@ -29,11 +29,12 @@ PowerPoint. Los cambios se hacen siempre en `slides.md` y se vuelve a exportar.
 | 2 | Diego Fernando Asprilla | 5–8 | Diseño | 3:00 |
 | 3 | Juan David Ocampo | 9–12 | Implementación y pruebas | 3:00 |
 | 4 | Nicolás Castro | 13–15 | Analítica | 3:00 |
-| — | Video | fuera del PDF | Demostración | 1:50 |
+| — | Video | fuera del PDF | Demostración | 2:00 |
 | 5 | Lucio Matías Melendez | 16–18 | Conclusiones y referencias | 3:00 |
 
-Total: **17:20**, dentro del máximo de 18 minutos. El video no tiene diapositiva: se reproduce
-directamente desde el archivo, con la última diapositiva de analítica en pantalla.
+Total: **17:20**, que incluye 20 s de apertura y cierre del video, dentro del máximo de 18 minutos.
+El video no tiene diapositiva: se reproduce directamente desde el archivo, con la última diapositiva
+de analítica en pantalla.
 
 ## Guiones individuales
 

@@ -27,7 +27,7 @@ Los parámetros del modelo (distribuciones de peso, altura, duración de rutinas
 - **Sin Docker:** Python 3.12 y `pip install -r requirements.txt`.
 - Espacio en disco y memoria según el tamaño (ver la tabla de más abajo).
 
-## 0. Con Docker Compose (recomendado)
+## Con Docker Compose (recomendado)
 
 El repo trae un servicio `dataset` bajo el perfil `tools`. Desde la raíz:
 
@@ -45,7 +45,7 @@ En Linux, los archivos generados quedan como `root`; si necesitas editarlos:
 sudo chown -R "$USER":"$USER" dataset/data
 ```
 
-## 1. Generar el dataset (con Docker)
+## Generar el dataset (con Docker)
 
 Desde esta carpeta (`dataset/`):
 
@@ -74,9 +74,9 @@ python3 generar_dataset.py --salida data --usuarios 20000
 | `--usuarios` | 10000 | Número de usuarios. Es la escala del dataset |
 | `--semilla` | 42 | Semilla aleatoria. Misma semilla y mismos parámetros dan el mismo dataset |
 | `--salida` | `data` | Carpeta donde se escriben los archivos |
-| `--bloque` | 2000 | Usuarios generados por bloque (controla la memoria). **No lo cambies si quieres reproducir un dataset**: cambia los datos |
+| `--bloque` | 2000 | Usuarios generados por bloque (controla la memoria). **No lo cambies si quieres reproducir un dataset**; para generar otro, cambia `--semilla` |
 
-## 2. Validar el dataset
+## Validar el dataset
 
 ```bash
 docker run --rm -v "$(pwd)/data:/data" fittrack-synth validar_dataset.py --dir /data

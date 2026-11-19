@@ -15,7 +15,7 @@ tests/load/                prueba de carga sin dependencias
 report/                    informe IEEE, figuras y PDF
 slides/                    diapositivas de la sustentación
 docs/
-  team-handoff.md          estado y tareas del equipo
+  team-handoff.md          estado final del proyecto
   despliegue-swarm.md      modo clúster en detalle
   configuracion.md         variables, puertos y roles
   verificacion.md          pruebas de API, carga, estrés y failover

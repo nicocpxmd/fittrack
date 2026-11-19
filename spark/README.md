@@ -62,8 +62,8 @@ Comprueba la UI en `http://<server-ip>:8080`: debe decir **Alive Workers** y los
 
 Para dos nodos, ambos workers deben ver el mismo `dataset/data` y escribir en el mismo `CURATED` y
 `OUT` (NFS/HDFS), o copiar el dataset a la misma ruta en cada worker. Con `file://` local, el Parquet
-de salida quedaría repartido entre nodos. El laboratorio usa un solo worker; dos nodos es trabajo
-futuro.
+de salida quedaría repartido entre nodos. El laboratorio usa un solo worker; la configuración de dos
+nodos queda fuera de esta entrega.
 
 ## Uso
 
@@ -89,7 +89,7 @@ Salidas:
 1. Lee los cuatro CSV con esquema explícito.
 2. Limpia duplicados, fechas `dd/mm/aaaa`, pesos en libras y pesos inválidos (30–250 kg).
 3. Normaliza metas de peso a kg.
-4. Escribe Parquet particionado por año.
+4. Escribe Parquet, con medidas y rutinas particionadas por año.
 5. Genera `cleaning.json`.
 
 ## Qué hace `analytics.py`

@@ -92,7 +92,7 @@ services:
     restart: unless-stopped
 
   # Perfil opcional para generar/validar el dataset sin depender del shell:
-  #   docker compose --profile tools run --rm dataset python generar_dataset.py --salida /data --usuarios 2000
+  #   docker compose --profile tools run --rm dataset generar_dataset.py --salida /data --usuarios 2000
   dataset:
     build: ./dataset
     profiles: ["tools"]

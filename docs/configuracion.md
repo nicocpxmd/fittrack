@@ -74,6 +74,6 @@ Después reinicia el servicio `users` para que el administrador quede promovido.
 
 **Qué protege.** El servicio `analytics` valida el token contra `users` y exige `role = admin` en todas
 las rutas menos `/health`. Ocultar la pestaña en el frontend es solo comodidad: una petición directa
-sin rol recibe `403`.
+con un token de usuario normal recibe `403`.
 
-# 8. Verificación
+La verificación de API, carga, estrés y failover está en [verificacion.md](verificacion.md).

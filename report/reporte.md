@@ -97,7 +97,7 @@ requisitos no funcionales: reproducibilidad (scripts y README) y operación con 
 
 Durante la revisión de avances se sumó un requisito funcional: los indicadores agregados solo puede
 consultarlos un usuario con rol de administrador. Un usuario registrado normalmente usa la aplicación
-—sus medidas, metas, progreso y rutinas— pero no accede a la analítica, que resume información de todos
+(sus medidas, metas, progreso y rutinas) pero no accede a la analítica, que resume información de todos
 los usuarios.
 
 ## 3. Diseño

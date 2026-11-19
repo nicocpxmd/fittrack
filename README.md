@@ -13,7 +13,7 @@ Entrega congelada: tag **`v4.1-proyecto-final`**.
 
 | Carpeta | Contenido |
 |---|---|
-| `services/` | Cinco microservicios REST: usuarios, medidas, progreso, rutinas y metas |
+| `services/` | Cinco microservicios de negocio: usuarios, medidas, progreso, rutinas y metas |
 | `analytics/` | API de solo lectura de los KPIs (FastAPI) |
 | `frontend/` | Dashboard HTML/JS con la pestaña Analítica |
 | `haproxy/` | Entrada única y balanceo de `/api/*` |
@@ -38,12 +38,12 @@ Los comandos son para bash. En Windows PowerShell: `cp` es `Copy-Item` y `mkdir 
 ### 1. Clonar
 
 ```bash
-git clone -b proyecto-final https://github.com/nicocpxmd/fittrack.git
+git clone -b v4.1-proyecto-final https://github.com/nicocpxmd/fittrack.git
 cd fittrack
 ```
 
-> La rama por defecto (`main`) está atrasada hasta que se haga el merge. Usa `proyecto-final` o el tag
-> `v4.1-proyecto-final`.
+> La entrega vive en la rama `proyecto-final` y en el tag `v4.1-proyecto-final`. La rama `main`
+> quedó en una versión anterior y no debe usarse para desplegar.
 
 ### 2. Crear el `.env`
 
@@ -79,8 +79,8 @@ docker compose up -d --build
 docker compose ps
 ```
 
-La primera vez tarda varios minutos. Espera a los once contenedores en `running` y a las tres bases en
-`healthy`.
+La primera vez tarda varios minutos. Espera a los once contenedores en `running` y a Postgres y MySQL
+en `healthy` (Mongo no define healthcheck).
 
 ### 5. Abrir
 
@@ -96,7 +96,7 @@ Para detener: `docker compose down`. Para borrar también los datos: `docker com
 
 ## Qué deberías ver
 
-- Un usuario normal opera la app, pero la analítica le responde `401` o `403`.
+- Un usuario normal opera la app; sin token la analítica responde `401` y con su token, `403`.
 - El administrador ve la pestaña **Analítica** con los indicadores del dataset.
 - `curl -s http://localhost:8080/api/analytics/health` responde `"status":"ok"` sin token.
 
@@ -150,11 +150,12 @@ Los quince casos con su solución: [troubleshooting](docs/troubleshooting.md).
 ## Documentación
 
 - **Informe IEEE:** [`report/reporte.pdf`](report/reporte.pdf)
-- **Diapositivas:** [`slides/slides.md`](slides/slides.md)
+- **Diapositivas:** [`slides/fittrack.pdf`](slides/fittrack.pdf) (fuente:
+  [`slides/slides.md`](slides/slides.md))
 - **Dataset:** [`dataset/README.md`](dataset/README.md) y
   [`dataset/CONSISTENCIA.md`](dataset/CONSISTENCIA.md)
 - **Configuración y roles:** [variables, puertos y acceso](docs/configuracion.md)
 - **Verificación:** [API, carga, estrés y failover](docs/verificacion.md)
 - **Estructura del repositorio:** [estructura](docs/estructura.md)
-- **Equipo:** [`docs/team-handoff.md`](docs/team-handoff.md)
+- **Estado final del proyecto:** [`docs/team-handoff.md`](docs/team-handoff.md)
 - **Guía sin Docker (legado):** [`docs/legacy/bare-metal/README.md`](docs/legacy/bare-metal/README.md)
